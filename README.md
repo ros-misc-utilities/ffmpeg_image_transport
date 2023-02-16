@@ -4,7 +4,8 @@ This ROS2 image transport supports encoding/decoding with the FFMpeg
 library. With this transport you can encode h264 and h265, using
 Nvidia hardware acceleration when available.
 This package is a complete rewrite of an
-(older ROS1 ffmpeg_image_transport)[https://github.com/daniilidis-group/ffmpeg_image_transport]
+[older ROS1 ffmpeg_image_transport](https://github.com/daniilidis-group/ffmpeg_image_transport)
+package.
 
 The publisher plugin of the transport produces 
 [ffmpeg image transport messages](https://github.com/berndpfrommer/ffmpeg_image_transport_msgs).
@@ -103,7 +104,7 @@ couldn't figure out how to set the parameters when starting the viewer. It just 
 ### Republishing
 
 The ``image_transport`` allows you to republish the decoded image locally,
-see for instance (here)[https://gitlab.com/boldhearts/ros2_v4l2_camera/-/blob/foxy/README.md].
+see for instance [here](https://gitlab.com/boldhearts/ros2_v4l2_camera/-/blob/foxy/README.md).
 Here the ROS parameters work as expected to modify the mapping between encoding and decoder.
 To decode incoming ``hevc_nvenc`` packets with the ``hevc`` decoder:
 ```
