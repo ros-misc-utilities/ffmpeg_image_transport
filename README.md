@@ -33,7 +33,7 @@ mkdir -p ws/src
 cd ws/src
 git clone https://github.com/berndpfrommer/ffmpeg_image_transport.git
 cd ..
-vcs import < src/ffmpeg_image_transport.git/ffmpeg_image_transport.repos
+vcs import < src/ffmpeg_image_transport/ffmpeg_image_transport.repos
 ```
 
 You should now be able to build:
