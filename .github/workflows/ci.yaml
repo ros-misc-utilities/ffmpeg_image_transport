@@ -1,0 +1,40 @@
+#
+# continuous integration workflow
+#
+name: continuous integration
+
+on:
+ push:
+    branches: [ master]
+ pull_request:
+    branches: [ master]
+ workflow_dispatch:
+    branches: [ master]
+
+jobs:
+  build_jammy_humble:
+    runs-on: ubuntu-22.04
+    name: ROS2 humble on Ubuntu Jammy (22.04)
+    container:
+      image: berndpfrommer/jammy_humble
+    steps:
+      - name: check out github repo
+        uses: actions/checkout@v3
+        with:
+          path: src/ffmpeg_image_transport
+          fetch-depth: 0
+      - name: compile from source and test
+        run: ./src/ffmpeg_image_transport/.github/scripts/build_and_test.bash
+  build_focal_galactic:
+    runs-on: ubuntu-20.04
+    name: ROS2 galactic on Ubuntu Focal (20.04)
+    container:
+      image: berndpfrommer/focal_galactic
+    steps:
+      - name: check out github repo
+        uses: actions/checkout@v3
+        with:
+          path: src/ffmpeg_image_transport
+          fetch-depth: 0
+      - name: compile from source and test
+        run: ./src/ffmpeg_image_transport/.github/scripts/build_and_test.bash
