@@ -60,6 +60,13 @@ ament_target_dependencies(${LIBRARY_NAME}
 
 target_link_libraries(${LIBRARY_NAME} opencv_imgproc PkgConfig::LIBAV)
 
+add_executable(test_encoder
+  test/test_encoder.cpp)
+
+target_link_libraries(test_encoder ${LIBRARY_NAME})
+target_include_directories(test_encoder PRIVATE include)
+ament_target_dependencies(test_encoder cv_bridge rclcpp sensor_msgs ffmpeg_image_transport_msgs)
+
 ament_export_dependencies(
   OpenCV
   cv_bridge
@@ -73,6 +80,10 @@ ament_export_dependencies(
 
 install(TARGETS ${LIBRARY_NAME} EXPORT export_${LIBRARY_NAME}
   ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION bin)
+
+install(TARGETS test_encoder
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION bin)
 
