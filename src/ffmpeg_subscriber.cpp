@@ -27,7 +27,9 @@ namespace ffmpeg_image_transport
 static const char nsc[] = "ffmpeg_image_transport.map.";
 // default mappings
 static const std::unordered_map<std::string, std::string> defaultMap{
-  {{"h264_nvenc", "h264"}, {"libx264", "h264"}, {"hevc_nvenc", "hevc_cuvid"},
+  {{"h264_nvenc", "h264"},
+   {"libx264", "h264"},
+   {"hevc_nvenc", "hevc_cuvid"},
    {"ha624_nvmpi", "h264"}}};
 
 FFMPEGSubscriber::FFMPEGSubscriber() : logger_(rclcpp::get_logger("FFMPEGSubscriber")) {}

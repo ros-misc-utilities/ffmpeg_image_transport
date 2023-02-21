@@ -167,7 +167,8 @@ bool FFMPEGEncoder::openCodec(int width, int height)
     // allocate image for frame
     if (
       av_image_alloc(
-        frame_->data, frame_->linesize, width, height, static_cast<AVPixelFormat>(frame_->format), 64) < 0) {
+        frame_->data, frame_->linesize, width, height, static_cast<AVPixelFormat>(frame_->format),
+        64) < 0) {
       throw(std::runtime_error("cannot alloc image!"));
     }
     // Initialize packet

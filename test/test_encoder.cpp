@@ -16,8 +16,8 @@
 #include <unistd.h>
 
 #include <ffmpeg_image_transport/ffmpeg_encoder.hpp>
-#include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/imgcodecs/imgcodecs.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
 
 void packetReady(const ffmpeg_image_transport::FFMPEGPacketConstPtr & pkt)
 {
@@ -35,7 +35,7 @@ void test_encoder(int numFrames)
   enc.setBitRate(8242880);
   enc.setGOPSize(2);
   enc.setFrameRate(100, 1);
-  const int width = 1920; // must be mult of 64 for some codecs!
+  const int width = 1920;  // must be mult of 64 for some codecs!
   const int height = 1080;
 
   cv::Mat mat = cv::Mat::zeros(height, width, CV_8UC3);
@@ -43,8 +43,8 @@ void test_encoder(int numFrames)
   for (int i = 0; i < numFrames; i++) {
     mat = cv::Mat::zeros(height, width, CV_8UC3);  // clear image
     cv::putText(
-		mat, std::to_string(i), cv::Point(mat.cols / 2, mat.rows / 2), cv::FONT_HERSHEY_COMPLEX,
-		2 /* font size */, cv::Scalar(255, 0, 0) /* col */, 2 /* weight */);
+      mat, std::to_string(i), cv::Point(mat.cols / 2, mat.rows / 2), cv::FONT_HERSHEY_COMPLEX,
+      2 /* font size */, cv::Scalar(255, 0, 0) /* col */, 2 /* weight */);
     const rclcpp::Time t = rclcpp::Clock().now();
     std_msgs::msg::Header header;
     header.stamp = t;
