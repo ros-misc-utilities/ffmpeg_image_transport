@@ -111,6 +111,23 @@ To decode incoming ``hevc_nvenc`` packets with the ``hevc`` decoder:
 ros2 run image_transport republish ffmpeg in/ffmpeg:=image_raw/ffmpeg raw out:=image_raw/uncompressed --ros-args -p "ffmpeg_image_transport.map.hevc_nvenc:=hevc"
 ```
 
+
+### How to use a custom version of libav (aka ffmpeg)
+
+Compile *and install* ffmpeg. Let's say the install directory is
+``/home/foo/ffmpeg/build``, then for it to be found while building,
+run colcon like this:
+```
+colcon build --symlink-install --cmake-args --no-warn-unused-cli -DFFMPEG_PKGCONFIG=/home/foo/ffmpeg/build/lib/pkgconfig -DCMAKE_BUILD_TYPE=RelWithDebInfo 
+```
+
+This will compile against the right headers, but at runtime it may
+still load the system ffmpeg libraries. To avoid that, set
+``LD_LIBRARY_PATH`` at runtime:
+```
+export LD_LIBRARY_PATH=/home/foo/ffmpeg/build/lib:${LD_LIBRARY_PATH}
+```
+
 ## License
 
 This software is issued under the Apache License Version 2.0.

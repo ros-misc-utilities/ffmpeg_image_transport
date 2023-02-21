@@ -96,10 +96,11 @@ bool FFMPEGEncoder::openCodec(int width, int height)
       throw(std::runtime_error("no codec set!"));
     }
     if ((width % 32) != 0) {
-      throw(std::runtime_error(
-        "image line width must be "
-        "multiple of 32 but is: " +
-        std::to_string(width)));
+      RCLCPP_WARN(logger_, "horiz res must be multiple of 32!");
+    }
+    if (codecName_ == "h264_nvmpi" && ((width % 64) != 0)) {
+      RCLCPP_WARN(logger_, "horiz res must be multiple of 64!");
+      throw(std::runtime_error("h264_nvmpi must have horiz rez mult of 64"));
     }
     // find codec
     AVCodec * codec = avcodec_find_encoder_by_name(codecName_.c_str());
@@ -166,7 +167,8 @@ bool FFMPEGEncoder::openCodec(int width, int height)
     // allocate image for frame
     if (
       av_image_alloc(
-        frame_->data, frame_->linesize, width, height, (AVPixelFormat)frame_->format, 32) < 0) {
+        frame_->data, frame_->linesize, width, height, static_cast<AVPixelFormat>(frame_->format),
+        64) < 0) {
       throw(std::runtime_error("cannot alloc image!"));
     }
     // Initialize packet

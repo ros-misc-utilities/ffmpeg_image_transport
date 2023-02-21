@@ -23,12 +23,17 @@ find_package(std_msgs REQUIRED)
 find_package(ffmpeg_image_transport_msgs REQUIRED)
 
 find_package(OpenCV REQUIRED imgproc)
+
+set(FFMPEG_PKGCONFIG "" CACHE STRING "extra path to pkgconfig")
+if("${FFMPEG_PKGCONFIG}" STREQUAL "")
+else()
+  message(WARNING "using FFMPEG package from ${FFMPEG_PKGCONFIG}")
+endif()
+
+set(ENV{PKG_CONFIG_PATH} ${FFMPEG_PKGCONFIG})
 find_package(PkgConfig REQUIRED)
 
 pkg_check_modules(LIBAV REQUIRED IMPORTED_TARGET
-    libavdevice
-    libavfilter
-    libavformat
     libavcodec
     libswresample
     libswscale

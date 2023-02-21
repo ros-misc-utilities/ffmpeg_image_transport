@@ -16,28 +16,32 @@
 #include <unistd.h>
 
 #include <ffmpeg_image_transport/ffmpeg_encoder.hpp>
+#include <opencv2/imgcodecs/imgcodecs.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 
 void packetReady(const ffmpeg_image_transport::FFMPEGPacketConstPtr & pkt)
 {
-  (void)pkt;
-  std::cout << " got packet!" << std::endl;
+  std::cout << " header stamp: " << rclcpp::Time(pkt->header.stamp).seconds() << std::endl;
+  std::cout << " got packet of size: " << pkt->data.size() << std::endl;
 }
 
 void test_encoder(int numFrames)
 {
   ffmpeg_image_transport::FFMPEGEncoder enc;
-  enc.setCodec("h264_nvenc");
+  enc.setCodec("h264_nvmpi");
   enc.setProfile("main");
-  enc.setPreset("ll");
+  enc.setPreset("slow");
   enc.setQMax(10);
   enc.setBitRate(8242880);
   enc.setGOPSize(2);
   enc.setFrameRate(100, 1);
-  cv::Mat mat = cv::Mat::zeros(1440, 1024, CV_8UC3);
+  const int width = 1920;  // must be mult of 64 for some codecs!
+  const int height = 1080;
+
+  cv::Mat mat = cv::Mat::zeros(height, width, CV_8UC3);
   enc.initialize(mat.cols, mat.rows, packetReady);
   for (int i = 0; i < numFrames; i++) {
-    mat = cv::Mat::zeros(1440, 1024, CV_8UC3);  // clear image
+    mat = cv::Mat::zeros(height, width, CV_8UC3);  // clear image
     cv::putText(
       mat, std::to_string(i), cv::Point(mat.cols / 2, mat.rows / 2), cv::FONT_HERSHEY_COMPLEX,
       2 /* font size */, cv::Scalar(255, 0, 0) /* col */, 2 /* weight */);
