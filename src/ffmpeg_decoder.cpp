@@ -143,15 +143,19 @@ bool FFMPEGDecoder::initDecoder(
     av_opt_set_int(codecContext_, "refcounted_frames", 1, 0);
     const std::string hwAcc("cuda");
     enum AVHWDeviceType hwDevType = get_hw_type(hwAcc, logger_);
+    // default
+    hwPixFormat_ = AV_PIX_FMT_NONE;
 
     if (hwDevType != AV_HWDEVICE_TYPE_NONE) {
       codecContext_->hw_device_ctx = hw_decoder_init(&hwDeviceContext_, hwDevType, logger_);
-      hwPixFormat_ = find_pix_format(encoding, hwDevType, codec, hwAcc, logger_);
-      // must put in global hash for the callback function
-      pix_format_map[codecContext_] = hwPixFormat_;
-      codecContext_->get_format = get_hw_format;
-    } else {
-      hwPixFormat_ = AV_PIX_FMT_NONE;
+      if (codecContext_->hw_device_ctx != NULL) {
+	hwPixFormat_ = find_pix_format(encoding, hwDevType, codec, hwAcc, logger_);
+	// must put in global hash for the callback function
+	pix_format_map[codecContext_] = hwPixFormat_;
+	codecContext_->get_format = get_hw_format;
+      } else { // hardware couldn't be initialized.
+	hwDevType = AV_HWDEVICE_TYPE_NONE;
+      }
     }
     codecContext_->width = width;
     codecContext_->height = height;
@@ -222,7 +226,7 @@ bool FFMPEGDecoder::decodePacket(const FFMPEGPacketConstPtr & msg)
       swsContext_ = sws_getContext(
         ctx->width, ctx->height, (AVPixelFormat)frame->format,        // src
         ctx->width, ctx->height, (AVPixelFormat)colorFrame_->format,  // dest
-        SWS_FAST_BILINEAR, NULL, NULL, NULL);
+        SWS_FAST_BILINEAR | SWS_ACCURATE_RND, NULL, NULL, NULL);
       if (!swsContext_) {
         RCLCPP_ERROR(logger_, "cannot allocate sws context!!!!");
         return (false);
