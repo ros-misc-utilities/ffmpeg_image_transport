@@ -149,12 +149,12 @@ bool FFMPEGDecoder::initDecoder(
     if (hwDevType != AV_HWDEVICE_TYPE_NONE) {
       codecContext_->hw_device_ctx = hw_decoder_init(&hwDeviceContext_, hwDevType, logger_);
       if (codecContext_->hw_device_ctx != NULL) {
-	hwPixFormat_ = find_pix_format(encoding, hwDevType, codec, hwAcc, logger_);
-	// must put in global hash for the callback function
-	pix_format_map[codecContext_] = hwPixFormat_;
-	codecContext_->get_format = get_hw_format;
-      } else { // hardware couldn't be initialized.
-	hwDevType = AV_HWDEVICE_TYPE_NONE;
+        hwPixFormat_ = find_pix_format(encoding, hwDevType, codec, hwAcc, logger_);
+        // must put in global hash for the callback function
+        pix_format_map[codecContext_] = hwPixFormat_;
+        codecContext_->get_format = get_hw_format;
+      } else {  // hardware couldn't be initialized.
+        hwDevType = AV_HWDEVICE_TYPE_NONE;
       }
     }
     codecContext_->width = width;

@@ -206,13 +206,14 @@ void FFMPEGEncoder::encodeImage(const Image & msg)
   }
 }
 
-void strided_copy(uint8_t *dest, const int stride_dest,
-                 const uint8_t *src, const int stride_src,
-                 const int n, const int length){
-  if (stride_dest == stride_src == length){
+void strided_copy(
+  uint8_t * dest, const int stride_dest, const uint8_t * src, const int stride_src, const int n,
+  const int length)
+{
+  if (stride_dest == stride_src == length) {
     memcpy(dest, src, n * length);
   } else {
-    for(int ii=0; ii < n; ii++){
+    for (int ii = 0; ii < n; ii++) {
       memcpy(dest + stride_dest * ii, src + stride_src * ii, length);
     }
   }
@@ -233,27 +234,19 @@ void FFMPEGEncoder::encodeImage(const cv::Mat & img, const Header & header, cons
   const AVPixelFormat targetFmt = codecContext_->pix_fmt;
   if (targetFmt == AV_PIX_FMT_BGR0) {
     const uint8_t * p = img.data;
-    strided_copy(frame_->data[0], frame_->linesize[0],
-		 p, width,
-		 height, width);
+    strided_copy(frame_->data[0], frame_->linesize[0], p, width, height, width);
   } else if (targetFmt == AV_PIX_FMT_YUV420P) {
     cv::Mat yuv;
     cv::cvtColor(img, yuv, cv::COLOR_BGR2YUV_I420);
     const uint8_t * p = yuv.data;
     // Y
-    strided_copy(
-      frame_->data[0], frame_->linesize[0],
-      p, width,
-      height, width);
+    strided_copy(frame_->data[0], frame_->linesize[0], p, width, height, width);
     // U
     strided_copy(
-      frame_->data[1], frame_->linesize[1],
-      p + width * height, width / 2,
-      height / 2, width / 2);
+      frame_->data[1], frame_->linesize[1], p + width * height, width / 2, height / 2, width / 2);
     // V
     strided_copy(
-      frame_->data[2], frame_->linesize[2],
-      p + width * height + width / 2 * height / 2, width / 2,
+      frame_->data[2], frame_->linesize[2], p + width * height + width / 2 * height / 2, width / 2,
       height / 2, width / 2);
   } else {
     RCLCPP_ERROR_STREAM(logger_, "cannot convert format bgr8 -> " << (int)codecContext_->pix_fmt);
