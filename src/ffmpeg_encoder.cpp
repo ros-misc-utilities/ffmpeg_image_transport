@@ -210,7 +210,7 @@ void strided_copy(
   uint8_t * dest, const int stride_dest, const uint8_t * src, const int stride_src, const int n,
   const int length)
 {
-  if (stride_dest == stride_src == length) {
+  if ((stride_dest == stride_src) && (stride_src == length)) {
     memcpy(dest, src, n * length);
   } else {
     for (int ii = 0; ii < n; ii++) {
