@@ -232,9 +232,9 @@ void FFMPEGEncoder::encodeImage(const cv::Mat & img, const Header & header, cons
   const int width = img.cols;
   const int height = img.rows;
   const AVPixelFormat targetFmt = codecContext_->pix_fmt;
-  if (targetFmt == AV_PIX_FMT_BGR0) {
+  if (targetFmt == AV_PIX_FMT_BGR24) {
     const uint8_t * p = img.data;
-    strided_copy(frame_->data[0], frame_->linesize[0], p, width, height, width);
+    strided_copy(frame_->data[0], frame_->linesize[0], p, width * 3, height, width * 3);
   } else if (targetFmt == AV_PIX_FMT_YUV420P) {
     cv::Mat yuv;
     cv::cvtColor(img, yuv, cv::COLOR_BGR2YUV_I420);
