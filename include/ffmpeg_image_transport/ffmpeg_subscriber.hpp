@@ -39,9 +39,16 @@ protected:
   void subscribeImpl(
     rclcpp::Node * node, const std::string & base_topic, const Callback & callback,
     rmw_qos_profile_t custom_qos) override;
+  void subscribeImpl(
+    rclcpp::Node * node, const std::string & base_topic, const Callback & callback,
+    rmw_qos_profile_t custom_qos, rclcpp::SubscriptionOptions) override
+  {
+    subscribeImpl(node, base_topic, callback, custom_qos);
+  }
 
 private:
   void frameReady(const ImageConstPtr & img, bool /*isKeyFrame*/) const;
+  void initialize(rclcpp::Node * node);
   // -------------- variables
   rclcpp::Logger logger_;
   rclcpp::Node * node_;
