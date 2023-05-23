@@ -195,17 +195,16 @@ bool FFMPEGDecoder::decodePacket(const FFMPEGPacketConstPtr & msg)
     return (false);
   }
   AVCodecContext * ctx = codecContext_;
-  AVPacket packet;
-  av_init_packet(&packet);
-  av_new_packet(&packet, msg->data.size());  // will add some padding!
-  memcpy(packet.data, &msg->data[0], msg->data.size());
-  packet.pts = msg->pts;
-  packet.dts = packet.pts;
-  ptsToStamp_[packet.pts] = msg->header.stamp;
-  int ret = avcodec_send_packet(ctx, &packet);
+  AVPacket * packet = av_packet_alloc();
+  av_new_packet(packet, msg->data.size());  // will add some padding!
+  memcpy(packet->data, &msg->data[0], msg->data.size());
+  packet->pts = msg->pts;
+  packet->dts = packet->pts;
+  ptsToStamp_[packet->pts] = msg->header.stamp;
+  int ret = avcodec_send_packet(ctx, packet);
   if (ret != 0) {
     RCLCPP_WARN_STREAM(logger_, "send_packet failed for pts: " << msg->pts);
-    av_packet_unref(&packet);
+    av_packet_unref(packet);
     return (false);
   }
   ret = avcodec_receive_frame(ctx, decodedFrame_);
@@ -214,7 +213,7 @@ bool FFMPEGDecoder::decodePacket(const FFMPEGPacketConstPtr & msg)
     ret = av_hwframe_transfer_data(cpuFrame_, decodedFrame_, 0);
     if (ret < 0) {
       RCLCPP_WARN_STREAM(logger_, "failed to transfer data from GPU->CPU");
-      av_packet_unref(&packet);
+      av_packet_unref(packet);
       return (false);
     }
   }
@@ -257,7 +256,8 @@ bool FFMPEGDecoder::decodePacket(const FFMPEGPacketConstPtr & msg)
       callback_(image, decodedFrame_->key_frame == 1);  // deliver callback
     }
   }
-  av_packet_unref(&packet);
+  av_packet_unref(packet);
+  av_packet_free(&packet);
   if (measurePerformance_) {
     const auto t1 = rclcpp::Clock().now();
     double dt = (t1 - t0).seconds();
