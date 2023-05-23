@@ -137,7 +137,7 @@ private:
   // libav state
   AVCodecContext * codecContext_{NULL};
   AVFrame * frame_{NULL};
-  AVPacket packet_;
+  AVPacket * packet_;
   int64_t pts_{0};
   PTSMap ptsToStamp_;
   // performance analysis

@@ -26,15 +26,7 @@
 
 namespace ffmpeg_image_transport
 {
-FFMPEGEncoder::FFMPEGEncoder() : logger_(rclcpp::get_logger("FFMPEGEncoder"))
-{
-  // must init the packet and set the pointers to zero
-  // in case a closeCodec() happens right away,
-  // and av_packet_unref() is called.
-  av_init_packet(&packet_);
-  packet_.data = NULL;  // packet data will be allocated by the encoder
-  packet_.size = 0;
-}
+FFMPEGEncoder::FFMPEGEncoder() : logger_(rclcpp::get_logger("FFMPEGEncoder")) {}
 
 FFMPEGEncoder::~FFMPEGEncoder()
 {
@@ -58,10 +50,9 @@ void FFMPEGEncoder::closeCodec()
     av_free(frame_);
     frame_ = 0;
   }
-  if (packet_.data != NULL) {
-    av_packet_unref(&packet_);  // free packet allocated by encoder
-    packet_.data = NULL;
-    packet_.size = 0;
+  if (packet_) {
+    av_packet_free(&packet_);  // also unreferences the packet
+    packet_ = nullptr;
   }
 }
 
@@ -172,9 +163,9 @@ bool FFMPEGEncoder::openCodec(int width, int height)
       throw(std::runtime_error("cannot alloc image!"));
     }
     // Initialize packet
-    av_init_packet(&packet_);
-    packet_.data = NULL;  // packet data will be allocated by the encoder
-    packet_.size = 0;
+    packet_ = av_packet_alloc();
+    packet_->data = NULL;
+    packet_->size = 0;
   } catch (const std::runtime_error & e) {
     RCLCPP_ERROR_STREAM(logger_, e.what());
     if (codecContext_) {
@@ -281,24 +272,24 @@ int FFMPEGEncoder::drainPacket(const Header & header, int width, int height)
   if (measurePerformance_) {
     t0 = rclcpp::Clock().now();
   }
-  int ret = avcodec_receive_packet(codecContext_, &packet_);
+  int ret = avcodec_receive_packet(codecContext_, packet_);
   if (measurePerformance_) {
     t1 = rclcpp::Clock().now();
     tdiffReceivePacket_.update((t1 - t0).seconds());
   }
-  const AVPacket & pk = packet_;
-  if (ret == 0 && packet_.size > 0) {
+  const AVPacket & pk = *packet_;
+  if (ret == 0 && pk.size > 0) {
     FFMPEGPacket * packet = new FFMPEGPacket;
     FFMPEGPacketConstPtr pptr(packet);
-    packet->data.resize(packet_.size);
+    packet->data.resize(pk.size);
     packet->width = width;
     packet->height = height;
     packet->pts = pk.pts;
     packet->flags = pk.flags;
-    memcpy(&(packet->data[0]), packet_.data, packet_.size);
+    memcpy(&(packet->data[0]), pk.data, pk.size);
     if (measurePerformance_) {
       t2 = rclcpp::Clock().now();
-      totalOutBytes_ += packet_.size;
+      totalOutBytes_ += pk.size;
       tdiffCopyOut_.update((t2 - t1).seconds());
     }
     packet->header = header;
@@ -315,8 +306,7 @@ int FFMPEGEncoder::drainPacket(const Header & header, int width, int height)
     } else {
       RCLCPP_ERROR_STREAM(logger_, "pts " << pk.pts << " has no time stamp!");
     }
-    av_packet_unref(&packet_);  // free packet allocated by encoder
-    av_init_packet(&packet_);   // prepare next one
+    av_packet_unref(packet_);  // free packet allocated by encoder
   }
   return (ret);
 }
