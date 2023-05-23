@@ -40,8 +40,18 @@ protected:
     rclcpp::Node * node, const std::string & base_topic, const Callback & callback,
     rmw_qos_profile_t custom_qos) override;
 
+#ifndef USE_OLD_IMAGE_TRANSPORT_API
+  void subscribeImpl(
+    rclcpp::Node * node, const std::string & base_topic, const Callback & callback,
+    rmw_qos_profile_t custom_qos, rclcpp::SubscriptionOptions) override
+  {
+    subscribeImpl(node, base_topic, callback, custom_qos);
+  }
+#endif
+
 private:
   void frameReady(const ImageConstPtr & img, bool /*isKeyFrame*/) const;
+  void initialize(rclcpp::Node * node);
   // -------------- variables
   rclcpp::Logger logger_;
   rclcpp::Node * node_;

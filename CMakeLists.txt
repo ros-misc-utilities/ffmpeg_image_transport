@@ -11,6 +11,16 @@ if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
 endif()
 
+# the image transport api changed between distros
+if(DEFINED ENV{ROS_DISTRO})
+  if($ENV{ROS_DISTRO} STREQUAL "foxy" OR
+      $ENV{ROS_DISTRO} STREQUAL "galactic")
+    add_definitions(-DUSE_OLD_IMAGE_TRANSPORT_API)
+  endif()
+else()
+  message(ERROR "ROS_DISTRO environment variable is not set!")
+endif()
+
 find_package(ament_cmake REQUIRED)
 find_package(ament_cmake_ros REQUIRED)
 find_package(image_transport REQUIRED)

@@ -42,7 +42,14 @@ void FFMPEGSubscriber::subscribeImpl(
   rclcpp::Node * node, const std::string & base_topic, const Callback & callback,
   rmw_qos_profile_t custom_qos)
 {
+  initialize(node);
+  FFMPEGSubscriberPlugin::subscribeImpl(node, base_topic, callback, custom_qos);
+}
+
+void FFMPEGSubscriber::initialize(rclcpp::Node * node)
+{
   node_ = node;
+
   // create parameters from default map
   for (const auto & kv : defaultMap) {
     const std::string key = std::string(nsc) + kv.first;
@@ -53,8 +60,6 @@ void FFMPEGSubscriber::subscribeImpl(
   const std::string ns(nsc);
   const bool mp = get_safe_param<bool>(node_, ns + "measure_performance", false);
   decoder_.setMeasurePerformance(mp);
-
-  FFMPEGSubscriberPlugin::subscribeImpl(node, base_topic, callback, custom_qos);
 }
 
 void FFMPEGSubscriber::internalCallback(const FFMPEGPacketConstPtr & msg, const Callback & user_cb)
