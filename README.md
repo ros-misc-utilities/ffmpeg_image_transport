@@ -105,11 +105,44 @@ couldn't figure out how to set the parameters when starting the viewer. It just 
 
 The ``image_transport`` allows you to republish the decoded image locally,
 see for instance [here](https://gitlab.com/boldhearts/ros2_v4l2_camera/-/blob/foxy/README.md).
-Here the ROS parameters work as expected to modify the mapping between encoding and decoder.
-To decode incoming ``hevc_nvenc`` packets with the ``hevc`` decoder:
+Here the ROS parameters work as expected to modify the mapping between
+encoding and decoder.
+
+The following line shows how to specify the decoder when republishing.
+For example to decode incoming ``hevc_nvenc`` packets with the ``hevc`` decoder:
 ```
 ros2 run image_transport republish ffmpeg in/ffmpeg:=image_raw/ffmpeg raw out:=image_raw/uncompressed --ros-args -p "ffmpeg_image_transport.map.hevc_nvenc:=hevc"
 ```
+
+Republishing is generally not necessary so long as publisher and subscriber both properly use
+an image transport. Some nodes however, notably the rosbag player, do not support a proper transport,
+rendering republishing necessary.
+
+#### Republishing raw images from rosbags in ffmpeg format
+
+Suppose you have raw images in a rosbag but want to play them across a network using
+the ``ffmpeg_image_transport``. In this case run a republish node like this
+(assuming your rosbag topic is ``/my_camera/image_raw``):
+```
+ros2 run image_transport republish raw in:=/my_camera/image_raw
+```
+The republished topic will be under a full transport, meaning you can now view them with e.g. ``rqt_image_view`` under the topic ``/out/ffmpeg``.
+
+You can record them in ``ffmpeg`` format by e.g ``ros2 bag record /out/ffmpeg``.
+
+#### Republishing compressed images from rosbags
+
+Let's say you have stored images as ffmpeg packets in a rosbag under the topic ``/my_camera/ffmpeg``. To view them use this line:
+```
+ros2 run image_transport republish ffmpeg in/ffmpeg:=/my_camera/ffmpeg raw
+
+```
+This will republish the topic with full image transport support.
+
+### Setting encoding parameters when launching camera driver
+
+The ``launch`` directory contains an example launch file ``cam.launch.py`` that demonstrates
+how to set encoding profile and preset for e.g. a usb camera.
 
 
 ### How to use a custom version of libav (aka ffmpeg)

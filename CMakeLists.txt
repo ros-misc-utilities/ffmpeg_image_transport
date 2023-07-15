@@ -104,6 +104,11 @@ install(TARGETS test_encoder
 
 ament_export_targets(export_${LIBRARY_NAME})
 
+install(DIRECTORY
+  launch
+  DESTINATION share/${PROJECT_NAME}/
+  FILES_MATCHING PATTERN "*.py")
+
 install(
   DIRECTORY include/
   DESTINATION include/${PROJECT_NAME})
