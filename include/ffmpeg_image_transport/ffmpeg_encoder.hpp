@@ -135,9 +135,9 @@ private:
   AVRational frameRate_{100, 1};
   int64_t bitRate_{1000000};
   // libav state
-  AVCodecContext * codecContext_{NULL};
-  AVFrame * frame_{NULL};
-  AVPacket * packet_;
+  AVCodecContext * codecContext_{nullptr};
+  AVFrame * frame_{nullptr};
+  AVPacket * packet_{nullptr};
   int64_t pts_{0};
   PTSMap ptsToStamp_;
   // performance analysis
