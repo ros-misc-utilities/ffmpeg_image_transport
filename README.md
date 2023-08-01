@@ -11,7 +11,7 @@ The publisher plugin of the transport produces
 [ffmpeg image transport messages](https://github.com/berndpfrommer/ffmpeg_image_transport_msgs).
 These are raw, encoded packets that are then transmitted and decoded by the
 subscriber plugin of the transport. This image transport library
-contains both the plubisher(encoder) and subscriber(decoder)
+contains both the publisher(encoder) and subscriber(decoder)
 and therefore must be installed on both sides to be useful.
 
 
