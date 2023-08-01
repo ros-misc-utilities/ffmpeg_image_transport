@@ -94,7 +94,7 @@ bool FFMPEGEncoder::openCodec(int width, int height)
       throw(std::runtime_error("h264_nvmpi must have horiz rez mult of 64"));
     }
     // find codec
-    AVCodec * codec = avcodec_find_encoder_by_name(codecName_.c_str());
+    const AVCodec * codec = avcodec_find_encoder_by_name(codecName_.c_str());
     if (!codec) {
       throw(std::runtime_error("cannot find codec: " + codecName_));
     }
