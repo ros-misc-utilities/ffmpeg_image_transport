@@ -21,11 +21,6 @@ Tested on Ubuntu 20.04 and ROS2 Galactic.
 
 ## Installation
 
-Requires ``libav-dev``:
-```
-sudo apt-get install libavdevice-dev libavfilter-dev libavformat-dev
-sudo apt-get install libavcodec-dev libswresample-dev libswscale-dev libavutil-dev
-```
 Create a ROS2 workspace as usual, clone this repo into it and pull in
 the required repo with the messages:
 ```
@@ -34,6 +29,11 @@ cd ws/src
 git clone https://github.com/berndpfrommer/ffmpeg_image_transport.git
 cd ..
 vcs import < src/ffmpeg_image_transport/ffmpeg_image_transport.repos
+```
+
+Install the dependencies (libav) via rosdep (must be run from top of workspace!):
+```
+rosdep install --from-paths src --ignore-src -r -y
 ```
 
 You should now be able to build:

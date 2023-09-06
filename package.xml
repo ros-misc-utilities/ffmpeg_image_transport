@@ -28,6 +28,8 @@
   <depend>sensor_msgs</depend>
   <depend>std_msgs</depend>
   <depend>ffmpeg_image_transport_msgs</depend>
+  <depend>ffmpeg</depend>
+  <depend>libavdevice-dev</depend>
 
   <test_depend>ament_lint_common</test_depend>
   <test_depend>ament_lint_auto</test_depend>
