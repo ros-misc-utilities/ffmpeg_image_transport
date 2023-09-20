@@ -64,6 +64,11 @@ public:
     Lock lock(mutex_);
     preset_ = p;
   }
+  void setTune(const std::string & p)
+  {
+    Lock lock(mutex_);
+    tune_ = p;
+  }
   void setQMax(int q)
   {
     Lock lock(mutex_);
@@ -118,8 +123,12 @@ private:
   using PTSMap = std::unordered_map<int64_t, rclcpp::Time>;
 
   bool openCodec(int width, int height);
+  void doOpenCodec(int width, int height);
   void closeCodec();
   int drainPacket(const Header & hdr, int width, int height);
+  AVPixelFormat pixelFormat(const std::string & f) const;
+  void openVAAPIDevice(const AVCodec * codec, int width, int height);
+  void setAVOption(const std::string & field, const std::string & value);
   // --------- variables
   rclcpp::Logger logger_;
   mutable std::recursive_mutex mutex_;
@@ -128,16 +137,24 @@ private:
   std::string codecName_;  // e.g. "libx264"
   std::string preset_;     // e.g. "slow", "medium", "lossless"
   std::string profile_;    // e.g. "main", "high", "rext"
+  std::string tune_;       // e.g. "tune"
   int qmax_{0};            // max allowed quantization. The lower the better quality
   int GOPSize_{15};        // distance between two keyframes
-  AVPixelFormat pixFormat_{AV_PIX_FMT_YUV420P};
+  AVPixelFormat pixFormat_{AV_PIX_FMT_NONE};
   AVRational timeBase_{1, 100};
   AVRational frameRate_{100, 1};
   int64_t bitRate_{1000000};
-  // libav state
+  bool usesHardwareFrames_{false};
+  // ------ libav state
   AVCodecContext * codecContext_{nullptr};
+  AVBufferRef * hwDeviceContext_{nullptr};
   AVFrame * frame_{nullptr};
+  AVFrame * hw_frame_{nullptr};
   AVPacket * packet_{nullptr};
+  // ------ libswscale state
+  AVFrame * wrapperFrame_{nullptr};
+  SwsContext * swsContext_{NULL};
+  // ---------- other stuff
   int64_t pts_{0};
   PTSMap ptsToStamp_;
   // performance analysis

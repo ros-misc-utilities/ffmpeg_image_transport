@@ -65,15 +65,16 @@ The plugin has a few parameters that allow for some amount of control.
 
 ### Publisher (camera driver)
 
-- ``encoding``: Only ever tested: ``libx264``, ``h264_nvenc``, ``h264``, ``hevc_nvenc``.
+- ``encoding``: Only ever tested: ``libx264``, ``h264_nvenc``, ``h264``, ``hevc_nvenc``, ``h264_vaapi``.
   If you have an Nvidia card it most likely supports ``hevc_nvenc``.
   This will dramatically reduce the CPU load compare to ``libx264`` (the default).
   You can list all available codecs with ``ffmpeg -codecs``. In the relevant row,
   look for what it says under ``(encoders)``.
-- ``preset``: For instance ``slow``, ``ll`` (low latency) etc. Default is ``slow``.
+- ``preset``: For instance ``slow``, ``ll`` (low latency) etc.
   To find out what presets are available, run e.g.
   ``fmpeg -hide_banner -f lavfi -i nullsrc -c:v libx264 -preset help -f mp4 - 2>&1``
 - ``profile``: For instance ``baseline``, ``main``. See [the ffmpeg website](https://trac.ffmpeg.org/wiki/Encode/H.264).
+- ``tune``: See [the ffmpeg website](https://trac.ffmpeg.org/wiki/Encode/H.264).
 - ``gop_size``: The number of frames inbetween keyframes. Default is ``15``.
   The larger this number the more latency you will have, but also the more efficient
   the transmission becomes.
@@ -97,8 +98,8 @@ decoder for decoding incoming ``hevc_nvenc`` packets set a parameter like so *af
 ```
 ros2 param set <name_of_your_viewer_node> ffmpeg_image_transport.map.hevc_nvenc hevc
 ```
-You also need to refresh the subscription (drop down menu in the viewer) for the parameter to take hold. Sorry,
-couldn't figure out how to set the parameters when starting the viewer. It just doesn't work for me.
+You also need to refresh the subscription (drop down menu in the viewer) for the parameter to take hold.
+If anyone ever figures out how to set the parameters when starting the viewer, please report back.
 
 
 ### Republishing

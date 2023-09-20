@@ -131,8 +131,8 @@ bool FFMPEGDecoder::initDecoder(
     const AVCodec * codec = NULL;
     codec = avcodec_find_decoder_by_name(decoder.c_str());
     if (!codec) {
-      RCLCPP_ERROR_STREAM(logger_, "cannot open decoder " << decoder);
-      throw(std::runtime_error("cannot open decoder " + decoder));
+      RCLCPP_ERROR_STREAM(logger_, "cannot find decoder " << decoder);
+      throw(std::runtime_error("cannot find decoder " + decoder));
     }
     codecContext_ = avcodec_alloc_context3(codec);
     if (!codecContext_) {

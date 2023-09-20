@@ -25,10 +25,10 @@ void packetReady(const ffmpeg_image_transport::FFMPEGPacketConstPtr & pkt)
   std::cout << " got packet of size: " << pkt->data.size() << std::endl;
 }
 
-void test_encoder(int numFrames)
+void test_encoder(const std::string & codec, int numFrames)
 {
   ffmpeg_image_transport::FFMPEGEncoder enc;
-  enc.setCodec("h264_nvmpi");
+  enc.setCodec(codec);
   enc.setProfile("main");
   enc.setPreset("slow");
   enc.setQMax(10);
@@ -39,7 +39,10 @@ void test_encoder(int numFrames)
   const int height = 1080;
 
   cv::Mat mat = cv::Mat::zeros(height, width, CV_8UC3);
-  enc.initialize(mat.cols, mat.rows, packetReady);
+  if (!enc.initialize(mat.cols, mat.rows, packetReady)) {
+    std::cerr << "failed to initialize encoder!" << std::endl;
+    return;
+  }
   for (int i = 0; i < numFrames; i++) {
     mat = cv::Mat::zeros(height, width, CV_8UC3);  // clear image
     cv::putText(
@@ -57,10 +60,14 @@ int main(int argc, char ** argv)
   rclcpp::init(argc, argv);
   int numFrames = 10;
   int opt;
-  while ((opt = getopt(argc, argv, "n:")) != -1) {
+  std::string codec("hevc_nvenc");
+  while ((opt = getopt(argc, argv, "n:c:")) != -1) {
     switch (opt) {
       case 'n':
         numFrames = atoi(optarg);
+        break;
+      case 'c':
+        codec = optarg;
         break;
       default:
         std::cout << "unknown option: " << opt << std::endl;
@@ -68,6 +75,6 @@ int main(int argc, char ** argv)
     }
   }
 
-  test_encoder(numFrames);
+  test_encoder(codec, numFrames);
   return (0);
 }
