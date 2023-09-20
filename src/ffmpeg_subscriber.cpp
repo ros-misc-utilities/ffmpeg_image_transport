@@ -30,7 +30,8 @@ static const std::unordered_map<std::string, std::string> defaultMap{
   {{"h264_nvenc", "h264"},
    {"libx264", "h264"},
    {"hevc_nvenc", "hevc_cuvid"},
-   {"h264_nvmpi", "h264"}}};
+   {"h264_nvmpi", "h264"},
+   {"h264_vaapi", "h264"}}};
 
 FFMPEGSubscriber::FFMPEGSubscriber() : logger_(rclcpp::get_logger("FFMPEGSubscriber")) {}
 

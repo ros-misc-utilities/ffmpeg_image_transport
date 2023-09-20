@@ -28,32 +28,39 @@ from ament_index_python.packages import get_package_share_directory
 def generate_launch_description():
     ld = LaunchDescription()
 
-    parser = argparse.ArgumentParser(description='usb_cam launch')
-    parser.add_argument('-n', '--node-name', dest='node_name', type=str,
-                        help='name for device', default='usb_cam')
+    parser = argparse.ArgumentParser(description="usb_cam launch")
+    parser.add_argument(
+        "-n", "--node-name", dest="node_name", type=str, help="name for device", default="usb_cam"
+    )
 
     args, unknown = parser.parse_known_args(sys.argv[4:])
 
-    usb_cam_dir = get_package_share_directory('usb_cam')
+    usb_cam_dir = get_package_share_directory("usb_cam")
 
     # get path to params file
-    params_path = os.path.join(
-        usb_cam_dir,
-        'config',
-        'params.yaml'
-    )
+    params_path = os.path.join(usb_cam_dir, "config", "params.yaml")
 
     node_name = args.node_name
 
     print(params_path)
-    ld.add_action(Node(
-        package='usb_cam', executable='usb_cam_node_exe', output='screen',
-        name=node_name,
-        parameters=[params_path,
-                    {'ffmpeg_image_transport.encoding': 'hevc_nvenc',
-                     'ffmpeg_image_transport.profile': 'main',
-                     'ffmpeg_image_transport.preset': 'll',
-                     'ffmpeg_image_transport.gop': 15}]
-        ))
+    ld.add_action(
+        Node(
+            package="usb_cam",
+            executable="usb_cam_node_exe",
+            output="screen",
+            name=node_name,
+            parameters=[
+                params_path,
+                {
+                    "ffmpeg_image_transport.encoding": "h264_vaapi",
+                    # "ffmpeg_image_transport.encoding": "libx264",
+                    # "ffmpeg_image_transport.encoding": "hevc_nvenc",
+                    "ffmpeg_image_transport.profile": "main",
+                    "ffmpeg_image_transport.preset": "ll",
+                    "ffmpeg_image_transport.gop": 15,
+                },
+            ],
+        )
+    )
 
     return ld

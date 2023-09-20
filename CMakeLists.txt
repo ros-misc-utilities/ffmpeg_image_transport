@@ -59,6 +59,7 @@ add_library(
   src/ffmpeg_encoder.cpp
   src/ffmpeg_decoder.cpp
   src/tdiff.cpp
+  src/utils.cpp
   src/manifest.cpp)
 
 target_include_directories(${LIBRARY_NAME} PRIVATE
