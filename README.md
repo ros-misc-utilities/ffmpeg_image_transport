@@ -38,7 +38,7 @@ vcs import < src/ffmpeg_image_transport/ffmpeg_image_transport.repos
 
 Install the dependencies (libav) via rosdep (must be run from top of workspace!):
 ```
-rosdep install --from-paths src --ignore-src -r -y
+rosdep install --from-paths src --ignore-src -r
 ```
 
 You should now be able to build:
