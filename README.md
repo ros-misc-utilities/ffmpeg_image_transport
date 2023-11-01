@@ -17,7 +17,12 @@ and therefore must be installed on both sides to be useful.
 
 ## Supported systems
 
-Tested on Ubuntu 20.04 and ROS2 Galactic.
+Tested on:
+
+- Ubuntu 20.04 and ROS2 Galactic
+- Ubuntu 22.04 and ROS2 Humble
+
+Should also compile under ROS2 Iron.
 
 ## Installation
 

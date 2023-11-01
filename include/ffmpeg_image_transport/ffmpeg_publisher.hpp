@@ -34,13 +34,19 @@ public:
   std::string getTransportName() const override { return "ffmpeg"; }
 
 protected:
+#if defined(IMAGE_TRANSPORT_API_V1) || defined(IMAGE_TRANSPORT_API_V2)
   void advertiseImpl(
     rclcpp::Node * node, const std::string & base_topic, rmw_qos_profile_t custom_qos) override;
-
+#else
+  void advertiseImpl(
+    rclcpp::Node * node, const std::string & base_topic, rmw_qos_profile_t custom_qos,
+    rclcpp::PublisherOptions opt) override;
+#endif
   void publish(const Image & message, const PublishFn & publish_fn) const override;
 
 private:
   void packetReady(const FFMPEGPacketConstPtr & pkt);
+  rmw_qos_profile_t initialize(rclcpp::Node * node, rmw_qos_profile_t custom_qos);
   // variables ---------
   rclcpp::Logger logger_;
   const PublishFn * publishFunction_{NULL};

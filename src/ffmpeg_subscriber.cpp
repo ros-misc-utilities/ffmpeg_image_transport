@@ -39,6 +39,7 @@ FFMPEGSubscriber::~FFMPEGSubscriber() {}
 
 void FFMPEGSubscriber::frameReady(const ImageConstPtr & img, bool) const { (*userCallback_)(img); }
 
+#ifdef IMAGE_TRANSPORT_API_V1
 void FFMPEGSubscriber::subscribeImpl(
   rclcpp::Node * node, const std::string & base_topic, const Callback & callback,
   rmw_qos_profile_t custom_qos)
@@ -46,6 +47,20 @@ void FFMPEGSubscriber::subscribeImpl(
   initialize(node);
   FFMPEGSubscriberPlugin::subscribeImpl(node, base_topic, callback, custom_qos);
 }
+#else
+void FFMPEGSubscriber::subscribeImpl(
+  rclcpp::Node * node, const std::string & base_topic, const Callback & callback,
+  rmw_qos_profile_t custom_qos, rclcpp::SubscriptionOptions opt)
+{
+  initialize(node);
+#ifdef IMAGE_TRANSPORT_API_V2
+  (void)opt;  // to suppress compiler warning
+  FFMPEGSubscriberPlugin::subscribeImpl(node, base_topic, callback, custom_qos);
+#else
+  FFMPEGSubscriberPlugin::subscribeImpl(node, base_topic, callback, custom_qos, opt);
+#endif
+}
+#endif
 
 void FFMPEGSubscriber::initialize(rclcpp::Node * node)
 {

@@ -36,17 +36,15 @@ public:
 
 protected:
   void internalCallback(const FFMPEGPacketConstPtr & msg, const Callback & user_cb) override;
+
+#ifdef IMAGE_TRANSPORT_API_V1
   void subscribeImpl(
     rclcpp::Node * node, const std::string & base_topic, const Callback & callback,
     rmw_qos_profile_t custom_qos) override;
-
-#ifndef USE_OLD_IMAGE_TRANSPORT_API
+#else
   void subscribeImpl(
     rclcpp::Node * node, const std::string & base_topic, const Callback & callback,
-    rmw_qos_profile_t custom_qos, rclcpp::SubscriptionOptions) override
-  {
-    subscribeImpl(node, base_topic, callback, custom_qos);
-  }
+    rmw_qos_profile_t custom_qos, rclcpp::SubscriptionOptions) override;
 #endif
 
 private:

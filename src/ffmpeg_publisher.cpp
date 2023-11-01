@@ -27,8 +27,24 @@ FFMPEGPublisher::~FFMPEGPublisher() {}
 
 void FFMPEGPublisher::packetReady(const FFMPEGPacketConstPtr & pkt) { (*publishFunction_)(*pkt); }
 
+#if defined(IMAGE_TRANSPORT_API_V1) || defined(IMAGE_TRANSPORT_API_V2)
 void FFMPEGPublisher::advertiseImpl(
   rclcpp::Node * node, const std::string & base_topic, rmw_qos_profile_t custom_qos)
+{
+  auto qos = initialize(node, custom_qos);
+  FFMPEGPublisherPlugin::advertiseImpl(node, base_topic, qos);
+}
+#else
+void FFMPEGPublisher::advertiseImpl(
+  rclcpp::Node * node, const std::string & base_topic, rmw_qos_profile_t custom_qos,
+  rclcpp::PublisherOptions opt)
+{
+  auto qos = initialize(node, custom_qos);
+  FFMPEGPublisherPlugin::advertiseImpl(node, base_topic, qos, opt);
+}
+#endif
+
+rmw_qos_profile_t FFMPEGPublisher::initialize(rclcpp::Node * node, rmw_qos_profile_t custom_qos)
 {
   encoder_.setParameters(node);
   const std::string ns = "ffmpeg_image_transport.";
@@ -38,8 +54,7 @@ void FFMPEGPublisher::advertiseImpl(
 
   // bump queue size to 2 * distance between keyframes
   custom_qos.depth = std::max(static_cast<int>(custom_qos.depth), 2 * encoder_.getGOPSize());
-
-  FFMPEGPublisherPlugin::advertiseImpl(node, base_topic, custom_qos);
+  return (custom_qos);
 }
 
 void FFMPEGPublisher::publish(const Image & msg, const PublishFn & publish_fn) const
