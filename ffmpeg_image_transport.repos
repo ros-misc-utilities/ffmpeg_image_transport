@@ -1,5 +1,5 @@
 repositories:
   src/ffmpeg_image_transport_msgs:
     type: git
-    url: https://github.com/berndpfrommer/ffmpeg_image_transport_msgs.git
+    url: https://github.com/ros-misc-utilities/ffmpeg_image_transport_msgs.git
     version: master

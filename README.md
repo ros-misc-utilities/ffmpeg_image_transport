@@ -8,7 +8,7 @@ This package is a complete rewrite of an
 package.
 
 The publisher plugin of the transport produces 
-[ffmpeg image transport messages](https://github.com/berndpfrommer/ffmpeg_image_transport_msgs).
+[ffmpeg image transport messages](https://github.com/ros-misc-utitilies/ffmpeg_image_transport_msgs).
 These are raw, encoded packets that are then transmitted and decoded by the
 subscriber plugin of the transport. This image transport library
 contains both the publisher(encoder) and subscriber(decoder)
@@ -22,16 +22,23 @@ Tested on:
 - Ubuntu 20.04 and ROS2 Galactic
 - Ubuntu 22.04 and ROS2 Humble
 
-Should also compile under ROS2 Iron.
+Should build on later ROS2 distros as well.
 
 ## Installation
 
+### From packages
+
+```bash
+sudo apt-get install ros-${ROS_DISTRO}-ffmpeg-image-transport
+```
+
+### From source
 Create a ROS2 workspace as usual, clone this repo into it and pull in
 the required repo with the messages:
 ```
 mkdir -p ws/src
 cd ws/src
-git clone https://github.com/berndpfrommer/ffmpeg_image_transport.git
+git clone https://github.com/ros-misc-utilities/ffmpeg_image_transport.git
 cd ..
 vcs import < src/ffmpeg_image_transport/ffmpeg_image_transport.repos
 ```
