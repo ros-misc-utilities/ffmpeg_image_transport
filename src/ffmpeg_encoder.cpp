@@ -359,11 +359,11 @@ void FFMPEGEncoder::encodeImage(const Image & msg)
   // the encoder supports monochrome.
 
   cv::Mat img = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::BGR8)->image;
-  encodeImage(img, msg.header, t0);
   if (measurePerformance_) {
     const auto t1 = rclcpp::Clock().now();
     tdiffDebayer_.update((t1 - t0).seconds());
   }
+  encodeImage(img, msg.header, t0);
 }
 
 void FFMPEGEncoder::encodeImage(const cv::Mat & img, const Header & header, const rclcpp::Time & t0)
