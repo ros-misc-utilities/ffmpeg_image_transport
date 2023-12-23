@@ -53,6 +53,27 @@ pkg_check_modules(LIBAV REQUIRED IMPORTED_TARGET
     libswscale
     libavutil)
 
+###### Cuda ######
+set(CMAKE_CUDA_COMPILER /usr/bin/nvcc)
+set(CUDA_LIBRARIES "libcuda.so")
+enable_language(CUDA)
+find_package(CUDA  REQUIRED)
+include_directories("${CUDA_INCLUDE_DIRS}")
+
+add_library(cuda_encoder SHARED src/cuda_encoder.cu)
+target_include_directories(cuda_encoder PRIVATE include)
+target_include_directories(cuda_encoder PRIVATE /usr/include/)
+target_compile_options(cuda_encoder PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:
+                       --disable-warnings
+                       >)
+
+install(TARGETS cuda_encoder EXPORT export_cuda_encoder
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION bin)
+ament_export_targets(export_cuda_encoder)
+###### END Cuda ######
+
 set(LIBRARY_NAME ${PROJECT_NAME}_component)
 
 add_library(
@@ -79,6 +100,7 @@ ament_target_dependencies(${LIBRARY_NAME}
   ffmpeg_image_transport_msgs)
 
 target_link_libraries(${LIBRARY_NAME} opencv_imgproc PkgConfig::LIBAV)
+target_link_libraries(${LIBRARY_NAME} cuda_encoder ${CUDA_LIBRARIES})
 
 add_executable(test_encoder
   test/test_encoder.cpp)

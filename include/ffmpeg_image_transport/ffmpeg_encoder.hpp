@@ -27,6 +27,7 @@
 
 #include "ffmpeg_image_transport/tdiff.hpp"
 #include "ffmpeg_image_transport/types.hpp"
+#include "ffmpeg_image_transport/cuda_encoder.hpp"
 
 extern "C" {
 #include <libavcodec/avcodec.h>
@@ -128,6 +129,7 @@ private:
   int drainPacket(const Header & hdr, int width, int height);
   AVPixelFormat pixelFormat(const std::string & f) const;
   void openVAAPIDevice(const AVCodec * codec, int width, int height);
+  void openCudaDevice(const AVCodec * codec, int width, int height);
   void setAVOption(const std::string & field, const std::string & value);
   // --------- variables
   rclcpp::Logger logger_;
@@ -141,10 +143,12 @@ private:
   int qmax_{0};            // max allowed quantization. The lower the better quality
   int GOPSize_{15};        // distance between two keyframes
   AVPixelFormat pixFormat_{AV_PIX_FMT_NONE};
+  AVPixelFormat hwFormat_{AV_PIX_FMT_YUV420P}; // standard nvenc format
   AVRational timeBase_{1, 100};
   AVRational frameRate_{100, 1};
   int64_t bitRate_{1000000};
   bool usesHardwareFrames_{false};
+  bool usesHardwareConversion_{false};
   // ------ libav state
   AVCodecContext * codecContext_{nullptr};
   AVBufferRef * hwDeviceContext_{nullptr};
@@ -171,6 +175,11 @@ private:
   TDiff tdiffCopyOut_;
   TDiff tdiffPublish_;
   TDiff tdiffTotal_;
+  // Cuda Conversion Things
+  AVBufferRef *hw_device_context_;
+  struct cuda_vars *gpu_vars_ = NULL;
+  uint8_t* pRGB_;
+  uint8_t* pYUV_;
 };
 }  // namespace ffmpeg_image_transport
 #endif  // FFMPEG_IMAGE_TRANSPORT__FFMPEG_ENCODER_HPP_

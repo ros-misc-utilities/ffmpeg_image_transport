@@ -69,6 +69,12 @@ void FFMPEGEncoder::closeCodec()
     sws_freeContext(swsContext_);
     swsContext_ = NULL;
   }
+  if (usesHardwareConversion_){
+    if (hw_device_context_){ av_buffer_unref(&hw_device_context_); }
+    cudaFree(pRGB_);
+    cudaFree(pYUV_);
+    bayer2rgb_free(gpu_vars_);
+  }
 }
 
 AVPixelFormat FFMPEGEncoder::pixelFormat(const std::string & f) const
@@ -76,7 +82,12 @@ AVPixelFormat FFMPEGEncoder::pixelFormat(const std::string & f) const
   if (f.empty()) {
     return (AV_PIX_FMT_NONE);
   }
-  const auto fmt = av_get_pix_fmt(f.c_str());
+  auto fmt = av_get_pix_fmt(f.c_str()); // this function doesn't work
+  // manual check
+  if (f.find("rggb8") != std::string::npos) {
+    fmt = AV_PIX_FMT_BAYER_RGGB8;
+  }
+
   if (fmt == AV_PIX_FMT_NONE) {
     RCLCPP_ERROR_STREAM(logger_, "ignoring unknown pixel format: " << f);
   }
@@ -99,6 +110,7 @@ void FFMPEGEncoder::setParameters(rclcpp::Node * node)
     logger_, "enc: " << codecName_ << " prof: " << profile_ << " preset: " << preset_);
   RCLCPP_INFO_STREAM(
     logger_, "qmax: " << qmax_ << " bitrate: " << bitRate_ << " gop: " << GOPSize_);
+  RCLCPP_INFO_STREAM(logger_, "pix fmt: " << utils::pix(pixFormat_));
 }
 
 bool FFMPEGEncoder::initialize(int width, int height, Callback callback)
@@ -155,6 +167,49 @@ void FFMPEGEncoder::openVAAPIDevice(const AVCodec * codec, int width, int height
   }
 }
 
+void FFMPEGEncoder::openCudaDevice(const AVCodec * codec, int width, int height)
+{
+  int err = 0;
+  usesHardwareFrames_ = true;
+  usesHardwareConversion_ = true;
+  // must initialize the hw_frames_ctx
+  err = av_hwdevice_ctx_create(&hw_device_context_, AV_HWDEVICE_TYPE_CUDA, NULL, NULL, 0);
+  utils::check_for_err("cannot create hw device context", err);
+  AVBufferRef * hw_frames_ref = av_hwframe_ctx_alloc(hw_device_context_); // hw_device_context_ remains in my ownership (I'm responsible for freeing it)
+
+  if (hw_frames_ref == NULL){
+    throw(std::runtime_error("cannot allocate hwframe context!"));
+  }
+
+  // set up frame info
+  auto frame_ctx = (AVHWFramesContext*) hw_frames_ref->data;
+  frame_ctx->format = AV_PIX_FMT_CUDA;
+  frame_ctx->sw_format = AV_PIX_FMT_YUV420P;
+  frame_ctx->width = width;
+  frame_ctx->height = height;
+
+  // finalize hw_frames_ref for use
+  av_hwframe_ctx_init(hw_frames_ref); 
+
+  // set the hw_frames_ctx
+  codecContext_->hw_frames_ctx = av_buffer_ref(hw_frames_ref);
+
+  // unref
+  av_buffer_unref(&hw_frames_ref);
+
+  //// setup cuda
+  // init the bayer2rgb kernel
+  RCLCPP_INFO_STREAM(logger_, "initializing cuda_debayer. Width: " << width << " Height: " << height);
+  auto ret_cuda = bayer2rgb_init(&gpu_vars_, width, height, 3, false); // RGB24 has 3 bytes per pixel
+  if (ret_cuda != cudaSuccess) {
+    RCLCPP_ERROR_STREAM(logger_, "cannot init cuda_debayer: " << cudaGetErrorString(ret_cuda));
+    throw(std::runtime_error("cannot init cuda_debayer"));
+  }
+
+  // Allocate CUDA arrays in device memory
+  cudaMalloc(&pYUV_, (size_t) width * height * 1.5);
+}
+
 bool FFMPEGEncoder::openCodec(int width, int height)
 {
   try {
@@ -206,6 +261,8 @@ void FFMPEGEncoder::doOpenCodec(int width, int height)
 
   if (codecName_.find("vaapi") != std::string::npos) {
     openVAAPIDevice(codec, width, height);
+  } else if (codecName_.find("hevc_nvenc") != std::string::npos) {
+    openCudaDevice(codec, width, height);
   }
 
   if (usesHardwareFrames_) {
@@ -318,14 +375,47 @@ void FFMPEGEncoder::encodeImage(const cv::Mat & img, const Header & header, cons
     t1 = rclcpp::Clock().now();
     totalInBytes_ += img.cols * img.rows;  // raw size!
   }
-  // bend the memory pointers in colorFrame to the right locations
-  av_image_fill_arrays(
-    wrapperFrame_->data, wrapperFrame_->linesize, &(img.data[0]),
-    static_cast<AVPixelFormat>(wrapperFrame_->format), wrapperFrame_->width, wrapperFrame_->height,
-    1 /* alignment, could be better*/);
-  sws_scale(
-    swsContext_, wrapperFrame_->data, wrapperFrame_->linesize, 0,  // src
-    codecContext_->height, frame_->data, frame_->linesize);        // dest
+
+  if (!usesHardwareConversion_){
+    // bend the memory pointers in colorFrame to the right locations
+    av_image_fill_arrays(
+      wrapperFrame_->data, wrapperFrame_->linesize, &(img.data[0]),
+      static_cast<AVPixelFormat>(wrapperFrame_->format), wrapperFrame_->width, wrapperFrame_->height,
+      1 /* alignment, could be better*/);
+    sws_scale(
+      swsContext_, wrapperFrame_->data, wrapperFrame_->linesize, 0,  // src
+      codecContext_->height, frame_->data, frame_->linesize);        // dest
+  } else {
+    // use hardware to convert from pixFormat_ to hwFormat_
+    if (pixFormat_ == AV_PIX_FMT_BAYER_RGGB8 && hwFormat_ == AV_PIX_FMT_YUV420P){
+      cudaStream_t stream = NULL;
+      cudaError_t ret_cuda = cudaSuccess;
+
+      // run bayer->rgb kernel function
+      ret_cuda = bayer2rgb_process(gpu_vars_, (void*)img.data, &pRGB_, &stream, true);
+      if (ret_cuda != cudaSuccess) {
+      RCLCPP_ERROR_STREAM(logger_, "cannot hw convert bayerRG8 to RGB24: " << cudaGetErrorString(ret_cuda));
+      return;
+      }
+
+      // run rgb->yuv420p kernel function
+      ret_cuda = rgb2yuv420p_process(pRGB_, pYUV_, codecContext_->height, codecContext_->width);
+      if (ret_cuda != cudaSuccess) {
+      RCLCPP_ERROR_STREAM(logger_, "cannot hw convert RGB24 to YUV420P: " << cudaGetErrorString(ret_cuda));
+      return;
+      }
+
+      // construct hw frame
+      cudaDeviceSynchronize(); // might not have to call this, or there might be a quicker function
+      // set data[0] to the YUV surface cuda device pointer
+      hw_frame_->data[0] = (uint8_t*) pYUV_;
+      // set the number of bytes per line of the YUV image
+      hw_frame_->linesize[0] = codecContext_->width; 
+    } else {
+        RCLCPP_ERROR_STREAM(logger_, "No Cuda Converter available from: " << utils::pix(pixFormat_) << " to: " << utils::pix(hwFormat_));
+        return;
+    }
+  }
 
   if (measurePerformance_) {
     t2 = rclcpp::Clock().now();
@@ -336,10 +426,15 @@ void FFMPEGEncoder::encodeImage(const cv::Mat & img, const Header & header, cons
   ptsToStamp_.insert(PTSMap::value_type(frame_->pts, header.stamp));
 
   int ret;
-  if (usesHardwareFrames_) {
-    ret = av_hwframe_transfer_data(hw_frame_, frame_, 0);  // from software -> hardware frame
-    utils::check_for_err("error while copying frame to hw", ret);
+  if (usesHardwareFrames_){
+    // copy pts to the hw_frame_
     hw_frame_->pts = frame_->pts;
+
+    // if not doing hardware conversion, transfer the data from software -> hardware frame
+    if (!usesHardwareConversion_) {
+      ret = av_hwframe_transfer_data(hw_frame_, frame_, 0);
+      utils::check_for_err("error while copying frame to hw", ret);
+    }
   }
 
   ret = avcodec_send_frame(codecContext_, usesHardwareFrames_ ? hw_frame_ : frame_);
