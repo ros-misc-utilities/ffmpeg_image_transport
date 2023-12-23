@@ -87,6 +87,7 @@ target_link_libraries(test_encoder ${LIBRARY_NAME})
 target_include_directories(test_encoder PRIVATE include)
 ament_target_dependencies(test_encoder cv_bridge rclcpp sensor_msgs ffmpeg_image_transport_msgs)
 
+
 ament_export_dependencies(
   OpenCV
   cv_bridge
@@ -107,7 +108,9 @@ install(TARGETS test_encoder
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION bin)
 
-ament_export_targets(export_${LIBRARY_NAME})
+ament_export_include_directories(include)
+ament_export_libraries(${LIBRARY_NAME})
+ament_export_targets(export_${LIBRARY_NAME} HAS_LIBRARY_TARGET)
 
 install(DIRECTORY
   launch
@@ -116,7 +119,8 @@ install(DIRECTORY
 
 install(
   DIRECTORY include/
-  DESTINATION include/${PROJECT_NAME})
+  DESTINATION include
+)
 
 pluginlib_export_plugin_description_file(image_transport ffmpeg_plugins.xml)
 
