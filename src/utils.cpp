@@ -35,8 +35,12 @@ std::string pix(AVPixelFormat const & f)
 {
   char buf[64];
   buf[63] = 0;
-  av_get_pix_fmt_string(buf, sizeof(buf) - 1, f);
-  return (std::string(buf));
+  if (f == AV_PIX_FMT_NONE) {
+    return ("NO FORMAT");
+  } else {
+    av_get_pix_fmt_string(buf, sizeof(buf) - 1, f); // this returns an empty header if it's AV_PIX_FMT_NONE, so we need to check for that
+    return (std::string(buf));
+  }
 }
 
 // solution from https://github.com/joncampbell123/composite-video-simulator/issues/5
