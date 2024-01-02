@@ -98,7 +98,9 @@ your publisher node (camera driver), you can give it a parameter list on the way
         parameters=[{'ffmpeg_image_transport.encoding': 'hevc_nvenc',
                      'ffmpeg_image_transport.profile': 'main',
                      'ffmpeg_image_transport.preset': 'll',
-                     'ffmpeg_image_transport.gop': 15}]
+                     'ffmpeg_image_transport.gop': 15,
+                     'ffmpeg_image_transport.pixel_format': 'rggb8',
+                     }]
 ```
 
 ### Subscriber (viewer)
