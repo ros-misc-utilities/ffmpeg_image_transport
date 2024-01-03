@@ -91,6 +91,7 @@ void FFMPEGEncoder::setParameters(rclcpp::Node * node)
   profile_ = get_safe_param<std::string>(node, ns + "profile", "");
   preset_ = get_safe_param<std::string>(node, ns + "preset", "");
   tune_ = get_safe_param<std::string>(node, ns + "tune", "");
+  delay_ = get_safe_param<std::string>(node, ns + "delay", "");
   qmax_ = get_safe_param<int>(node, ns + "qmax", 10);
   bitRate_ = get_safe_param<int64_t>(node, ns + "bit_rate", 8242880);
   GOPSize_ = get_safe_param<int64_t>(node, ns + "gop_size", 15);
@@ -221,6 +222,7 @@ void FFMPEGEncoder::doOpenCodec(int width, int height)
   setAVOption("profile", profile_);
   setAVOption("preset", preset_);
   setAVOption("tune", tune_);
+  setAVOption("delay", delay_);
   RCLCPP_DEBUG(
     logger_,
     "codec: %10s, profile: %10s, preset: %10s,"
