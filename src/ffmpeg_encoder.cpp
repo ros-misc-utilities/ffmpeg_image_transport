@@ -486,11 +486,11 @@ int FFMPEGEncoder::drainPacket(const Header & header, int width, int height)
     if (it != ptsToStamp_.end()) {
       packet->header.stamp = it->second;
       packet->encoding = codecName_;
-      auto t_prepub = rclcpp::Clock().now();
-      std::cout << "t_precb dt: " << (t_prepub.nanoseconds() - (uint64_t)pptr->header.stamp.nanosec) * 1e-9 << std::endl;
+    //   auto t_prepub = rclcpp::Clock().now();
+    //   std::cout << "t_precb dt: " << (t_prepub.nanoseconds() - (uint64_t)pptr->header.stamp.nanosec) * 1e-9 << std::endl;
       callback_(pptr);  // deliver packet callback
-      auto t_postpub = rclcpp::Clock().now();
-      std::cout << "t_postcb dt: " << (t_postpub.nanoseconds() - (uint64_t)pptr->header.stamp.nanosec) * 1e-9 << std::endl;
+    //   auto t_postpub = rclcpp::Clock().now();
+    //   std::cout << "t_postcb dt: " << (t_postpub.nanoseconds() - (uint64_t)pptr->header.stamp.nanosec) * 1e-9 << std::endl;
       if (measurePerformance_) {
         const auto t3 = rclcpp::Clock().now();
         tdiffPublish_.update((t3 - t2).seconds());
