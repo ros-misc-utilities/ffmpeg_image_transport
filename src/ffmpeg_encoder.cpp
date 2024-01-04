@@ -283,9 +283,9 @@ void FFMPEGEncoder::doOpenCodec(int width, int height)
   setAVOption("delay", delay_);
   RCLCPP_DEBUG(
     logger_,
-    "codec: %10s, profile: %10s, preset: %10s,"
+    "codec: %10s, profile: %10s, preset: %10s, delay: %10s,"
     " bit_rate: %10ld qmax: %2d",
-    codecName_.c_str(), profile_.c_str(), preset_.c_str(), bitRate_, qmax_);
+    codecName_.c_str(), profile_.c_str(), preset_.c_str(), delay_.c_str(), bitRate_, qmax_);
 
   err = avcodec_open2(codecContext_, codec, NULL);
   utils::check_for_err("cannot open codec", err);
