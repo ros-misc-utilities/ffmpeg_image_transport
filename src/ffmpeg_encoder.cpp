@@ -259,6 +259,7 @@ void FFMPEGEncoder::doOpenCodec(int width, int height)
   codecContext_->framerate = frameRate_;
   codecContext_->gop_size = GOPSize_;
   codecContext_->max_b_frames = 0;  // nvenc can only handle zero!
+  codecContext_->delay = 0;
 
   if (codecName_.find("vaapi") != std::string::npos) {
     openVAAPIDevice(codec, width, height);
