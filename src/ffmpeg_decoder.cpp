@@ -160,6 +160,7 @@ bool FFMPEGDecoder::initDecoder(
     codecContext_->width = width;
     codecContext_->height = height;
     codecContext_->pkt_timebase = timeBase_;
+    codecContext_->delay = 0;
 
     if (avcodec_open2(codecContext_, codec, NULL) < 0) {
       RCLCPP_ERROR_STREAM(logger_, "open context failed for " + decoder);
