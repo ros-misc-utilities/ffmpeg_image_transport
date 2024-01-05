@@ -360,8 +360,15 @@ void FFMPEGEncoder::encodeImage(const Image & msg)
   }
   // TODO(Bernd): forcing the encoding to be BGR8 is wasteful when
   // the encoder supports monochrome.
+  cv::Mat img;
+  if (!usesHardwareConversion_){
+    img = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::BGR8)->image;
+  } else {
+    // get raw data into a cv::Mat
+    img = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::MONO8)->image;
 
-  cv::Mat img = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::BGR8)->image;
+    // img = cv::Mat((int) codecContext_->height, (int) codecContext_->width, CV_8U, (char*)(msg.data));
+  }
   if (measurePerformance_) {
     const auto t1 = rclcpp::Clock().now();
     tdiffDebayer_.update((t1 - t0).seconds());
