@@ -26,6 +26,14 @@
 
 namespace ffmpeg_image_transport
 {
+// default mappings
+static const std::unordered_map<std::string, std::string> defaultMap{
+  {{"h264_nvenc", "h264"},
+   {"libx264", "h264"},
+   {"hevc_nvenc", "hevc_cuvid"},
+   {"h264_nvmpi", "h264"},
+   {"h264_vaapi", "h264"}}};
+
 FFMPEGDecoder::FFMPEGDecoder() : logger_(rclcpp::get_logger("FFMPEGDecoder")) {}
 
 FFMPEGDecoder::~FFMPEGDecoder() { reset(); }
@@ -57,7 +65,7 @@ bool FFMPEGDecoder::initialize(
 {
   std::string decoder = dec;
   if (decoder.empty()) {
-    RCLCPP_INFO_STREAM(logger_, "unknown encoding: " << msg->encoding);
+    RCLCPP_INFO_STREAM(logger_, "no decoder for encoding: " << msg->encoding);
     return (false);
   }
   callback_ = callback;
@@ -273,4 +281,8 @@ void FFMPEGDecoder::printTimers(const std::string & prefix) const
   RCLCPP_INFO_STREAM(logger_, prefix << " total decode: " << tdiffTotal_);
 }
 
+const std::unordered_map<std::string, std::string> & FFMPEGDecoder::getDefaultEncoderToDecoderMap()
+{
+  return (defaultMap);
+}
 }  // namespace ffmpeg_image_transport

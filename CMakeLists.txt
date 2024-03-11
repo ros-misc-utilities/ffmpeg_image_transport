@@ -66,11 +66,12 @@ add_library(
   src/utils.cpp
   src/manifest.cpp)
 
-target_include_directories(${LIBRARY_NAME} PRIVATE
+target_include_directories(${LIBRARY_NAME} PUBLIC
   "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
-  "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>")
+  "$<INSTALL_INTERFACE:include>")
 
 ament_target_dependencies(${LIBRARY_NAME}
+PUBLIC
   cv_bridge
   image_transport
   pluginlib
@@ -78,7 +79,11 @@ ament_target_dependencies(${LIBRARY_NAME}
   sensor_msgs
   ffmpeg_image_transport_msgs)
 
-target_link_libraries(${LIBRARY_NAME} opencv_imgproc PkgConfig::LIBAV)
+target_link_libraries(${LIBRARY_NAME}
+  PUBLIC
+    opencv_imgproc
+    PkgConfig::LIBAV)
+
 
 add_executable(test_encoder
   test/test_encoder.cpp)
@@ -87,8 +92,10 @@ target_link_libraries(test_encoder ${LIBRARY_NAME})
 target_include_directories(test_encoder PRIVATE include)
 ament_target_dependencies(test_encoder cv_bridge rclcpp sensor_msgs ffmpeg_image_transport_msgs)
 
+
 ament_export_dependencies(
   OpenCV
+  LIBAV
   cv_bridge
   image_transport
   pluginlib
@@ -98,16 +105,20 @@ ament_export_dependencies(
   std_msgs
   ffmpeg_image_transport_msgs)
 
-install(TARGETS ${LIBRARY_NAME} EXPORT export_${LIBRARY_NAME}
+install(TARGETS ${LIBRARY_NAME}
+  EXPORT export_${LIBRARY_NAME}
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
-  RUNTIME DESTINATION bin)
+  RUNTIME DESTINATION bin
+  INCLUDES DESTINATION include)
 
 install(TARGETS test_encoder
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION bin)
 
-ament_export_targets(export_${LIBRARY_NAME})
+ament_export_include_directories(include)
+ament_export_libraries(${LIBRARY_NAME})
+ament_export_targets(export_${LIBRARY_NAME} HAS_LIBRARY_TARGET)
 
 install(DIRECTORY
   launch
@@ -116,7 +127,8 @@ install(DIRECTORY
 
 install(
   DIRECTORY include/
-  DESTINATION include/${PROJECT_NAME})
+  DESTINATION include
+)
 
 pluginlib_export_plugin_description_file(image_transport ffmpeg_plugins.xml)
 
@@ -146,4 +158,5 @@ if(BUILD_TESTING)
   ament_xmllint()
 endif()
 
-ament_package()
+ament_package(CONFIG_EXTRAS cmake/${PROJECT_NAME}-extras.cmake.in)
+
