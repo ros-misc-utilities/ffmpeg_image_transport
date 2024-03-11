@@ -70,8 +70,8 @@ target_include_directories(${LIBRARY_NAME} PUBLIC
   "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
   "$<INSTALL_INTERFACE:include>")
 
-
 ament_target_dependencies(${LIBRARY_NAME}
+PUBLIC
   cv_bridge
   image_transport
   pluginlib
@@ -79,7 +79,11 @@ ament_target_dependencies(${LIBRARY_NAME}
   sensor_msgs
   ffmpeg_image_transport_msgs)
 
-target_link_libraries(${LIBRARY_NAME} opencv_imgproc PkgConfig::LIBAV)
+target_link_libraries(${LIBRARY_NAME}
+  PUBLIC
+    opencv_imgproc
+    PkgConfig::LIBAV)
+
 
 add_executable(test_encoder
   test/test_encoder.cpp)
@@ -154,4 +158,5 @@ if(BUILD_TESTING)
   ament_xmllint()
 endif()
 
-ament_package()
+ament_package(CONFIG_EXTRAS cmake/${PROJECT_NAME}-extras.cmake.in)
+
