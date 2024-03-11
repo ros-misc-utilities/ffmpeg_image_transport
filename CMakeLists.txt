@@ -66,9 +66,10 @@ add_library(
   src/utils.cpp
   src/manifest.cpp)
 
-target_include_directories(${LIBRARY_NAME} PRIVATE
+target_include_directories(${LIBRARY_NAME} PUBLIC
   "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
-  "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>")
+  "$<INSTALL_INTERFACE:include>")
+
 
 ament_target_dependencies(${LIBRARY_NAME}
   cv_bridge
@@ -90,6 +91,7 @@ ament_target_dependencies(test_encoder cv_bridge rclcpp sensor_msgs ffmpeg_image
 
 ament_export_dependencies(
   OpenCV
+  LIBAV
   cv_bridge
   image_transport
   pluginlib
@@ -99,10 +101,12 @@ ament_export_dependencies(
   std_msgs
   ffmpeg_image_transport_msgs)
 
-install(TARGETS ${LIBRARY_NAME} EXPORT export_${LIBRARY_NAME}
+install(TARGETS ${LIBRARY_NAME}
+  EXPORT export_${LIBRARY_NAME}
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
-  RUNTIME DESTINATION bin)
+  RUNTIME DESTINATION bin
+  INCLUDES DESTINATION include)
 
 install(TARGETS test_encoder
   LIBRARY DESTINATION lib
