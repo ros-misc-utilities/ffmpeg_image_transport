@@ -2,8 +2,8 @@
 Changelog for package ffmpeg_image_transport
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.1.1 (2024-03-11)
+------------------
 * added documentation
 * move encoder->decoder map to decoder for public use
 * added frame delay control
