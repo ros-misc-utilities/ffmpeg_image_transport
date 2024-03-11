@@ -25,13 +25,6 @@ using namespace std::placeholders;
 namespace ffmpeg_image_transport
 {
 static const char nsc[] = "ffmpeg_image_transport.map.";
-// default mappings
-static const std::unordered_map<std::string, std::string> defaultMap{
-  {{"h264_nvenc", "h264"},
-   {"libx264", "h264"},
-   {"hevc_nvenc", "hevc_cuvid"},
-   {"h264_nvmpi", "h264"},
-   {"h264_vaapi", "h264"}}};
 
 FFMPEGSubscriber::FFMPEGSubscriber() : logger_(rclcpp::get_logger("FFMPEGSubscriber")) {}
 
@@ -67,7 +60,7 @@ void FFMPEGSubscriber::initialize(rclcpp::Node * node)
   node_ = node;
 
   // create parameters from default map
-  for (const auto & kv : defaultMap) {
+  for (const auto & kv : FFMPEGDecoder::getDefaultEncoderToDecoderMap()) {
     const std::string key = std::string(nsc) + kv.first;
     if (!node_->has_parameter(key)) {
       (void)node_->declare_parameter<std::string>(key, kv.second);
