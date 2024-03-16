@@ -36,6 +36,10 @@ find_package(sensor_msgs REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(ffmpeg_image_transport_msgs REQUIRED)
 
+if(${cv_bridge_VERSION} GREATER "3.3.0")
+  add_definitions(-DUSE_CV_BRIDGE_HPP)
+endif()
+
 find_package(OpenCV REQUIRED imgproc)
 
 set(FFMPEG_PKGCONFIG "" CACHE STRING "extra path to pkgconfig")

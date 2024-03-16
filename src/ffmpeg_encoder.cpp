@@ -15,7 +15,11 @@
 
 #include "ffmpeg_image_transport/ffmpeg_encoder.hpp"
 
+#ifdef USE_CV_BRIDGE_HPP
+#include <cv_bridge/cv_bridge.hpp>
+#else
 #include <cv_bridge/cv_bridge.h>
+#endif
 
 #include <fstream>
 #include <iomanip>
