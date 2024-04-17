@@ -15,13 +15,11 @@
 
 #include "ffmpeg_image_transport/ffmpeg_decoder.hpp"
 
-#include <cv_bridge/cv_bridge.h>
-
 #include <fstream>
 #include <iomanip>
 #include <opencv2/imgcodecs.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
-#include <sensor_msgs/msg/image.hpp>
+#include <sensor_msgs/image_encodings.hpp>
 #include <unordered_map>
 
 namespace ffmpeg_image_transport
