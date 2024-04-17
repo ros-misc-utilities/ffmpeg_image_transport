@@ -61,6 +61,7 @@ public:
   void printTimers(const std::string & prefix) const;
   void resetTimers();
   void setLogger(rclcpp::Logger logger) { logger_ = logger; }
+  static const std::unordered_map<std::string, std::string> & getDefaultEncoderToDecoderMap();
 
 private:
   rclcpp::Logger logger_;

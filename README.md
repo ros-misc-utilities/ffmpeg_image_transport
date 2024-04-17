@@ -1,8 +1,8 @@
 # ROS2 image transport for FFmpeg encoding
 
-This ROS2 image transport supports encoding/decoding with the FFMpeg
-library. With this transport you can encode h264 and h265, using
-Nvidia hardware acceleration when available.
+The ROS2 image transport supports encoding/decoding with the FFMpeg
+library, for example encoding h264 and h265 or HEVC, using
+Nvidia or other hardware acceleration when available.
 This package is a complete rewrite of an
 [older ROS1 ffmpeg_image_transport](https://github.com/daniilidis-group/ffmpeg_image_transport)
 package.
@@ -10,19 +10,21 @@ package.
 The publisher plugin of the transport produces 
 [ffmpeg image transport messages](https://github.com/ros-misc-utitilies/ffmpeg_image_transport_msgs).
 These are raw, encoded packets that are then transmitted and decoded by the
-subscriber plugin of the transport. This image transport library
-contains both the publisher(encoder) and subscriber(decoder)
+subscriber plugin of the transport. The transport library 
+contains both the publisher(encoder) and subscriber(decoder) plugin
 and therefore must be installed on both sides to be useful.
 
+To extract e.g. frames or an mp4 file from a recorded bag, have a look at the
+[ffmpeg\_image\_transport\_tools](https://github.com/ros-misc-utilities/ffmpeg_image_transport_tools) repository.
 
 ## Supported systems
 
-Tested on:
+Continuous integration is tested under Ubuntu with the following ROS2 distros:
 
-- Ubuntu 20.04 and ROS2 Galactic
-- Ubuntu 22.04 and ROS2 Humble
+ [![Build Status](https://build.ros2.org/buildStatus/icon?job=Hdev__ffmpeg_image_transport__ubuntu_jammy_amd64&subject=Humble)](https://build.ros2.org/job/Hdev__ffmpeg_image_transport__ubuntu_jammy_amd64/)
+ [![Build Status](https://build.ros2.org/buildStatus/icon?job=Idev__ffmpeg_image_transport__ubuntu_jammy_amd64&subject=Iron)](https://build.ros2.org/job/Idev__ffmpeg_image_transport__ubuntu_jammy_amd64/)
+ [![Build Status](https://build.ros2.org/buildStatus/icon?job=Rdev__ffmpeg_image_transport__ubuntu_jammy_amd64&subject=Rolling)](https://build.ros2.org/job/Rdev__ffmpeg_image_transport__ubuntu_jammy_amd64/)
 
-Should build on later ROS2 distros as well.
 
 ## Installation
 
@@ -33,34 +35,25 @@ sudo apt-get install ros-${ROS_DISTRO}-ffmpeg-image-transport
 ```
 
 ### From source
-Create a ROS2 workspace as usual, clone this repo into it and pull in
-the required repo with the messages:
-```
-mkdir -p ws/src
-cd ws/src
-git clone https://github.com/ros-misc-utilities/ffmpeg_image_transport.git
-cd ..
-vcs import < src/ffmpeg_image_transport/ffmpeg_image_transport.repos
-```
 
-Install the dependencies (libav) via rosdep (must be run from top of workspace!):
+Set the following shell variables:
+```bash
+repo=ffmpeg_image_transport
+url=https://github.com/ros-misc-utilities/${repo}.git
 ```
-rosdep install --from-paths src --ignore-src -r
-```
-
-You should now be able to build:
-```
-colcon build --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=RelWithDebInfo 
-```
+and follow the [instructions here](https://github.com/ros-misc-utilities/.github/blob/master/docs/build_ros_repository.md)
 
 Make sure to source your workspace's ``install/setup.bash`` afterwards.
 If all goes well you should see the transport show up:
+
 ```
 ros2 run image_transport list_transports
 ```
+
 should give output (among other transport plugins):
-```
-image_transport/ffmpeg"
+
+```text
+"image_transport/ffmpeg"
  - Provided by package: ffmpeg_image_transport
  - Publisher: 
       This plugin encodes frames into ffmpeg compressed packets
@@ -68,6 +61,7 @@ image_transport/ffmpeg"
  - Subscriber: 
       This plugin decodes frames from ffmpeg compressed packets
 ```
+
 Remember to install the plugin on both hosts, the one that is encoding and
 the one that is decoding (viewing).
 
