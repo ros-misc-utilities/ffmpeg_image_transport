@@ -2,8 +2,8 @@
 Changelog for package ffmpeg_image_transport
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.1.2 (2024-04-17)
+------------------
 * use appropriate header for cv_bridge
 * Contributors: Bernd Pfrommer
 
