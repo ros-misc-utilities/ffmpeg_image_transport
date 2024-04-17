@@ -2,8 +2,8 @@
 Changelog for package ffmpeg_image_transport
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.0.1 (2024-04-17)
+------------------
 * use appropriate header for cv_bridge
 * added documentation and improved cmake exporting
 * move encoder->decoder map to decoder for public use
