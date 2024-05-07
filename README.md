@@ -168,6 +168,24 @@ still load the system ffmpeg libraries. To avoid that, set
 export LD_LIBRARY_PATH=/home/foo/ffmpeg/build/lib:${LD_LIBRARY_PATH}
 ```
 
+### How to use ffmpeg hardware accelerated encoding on the NVidia Jetson
+
+Follow the instructions
+[here](https://github.com/jocover/jetson-ffmpeg) to build a version of
+ffmpeg that supports NVMPI. Then follow the section above on how to
+actually use that custom ffmpeg library. As always first test on the
+CLI that the newly compiled ``ffmpeg`` command now supports
+``h264_nvmpi``. The transport can now be configured to use
+nvmpi like so:
+
+```
+        parameters=[{'ffmpeg_image_transport.encoding': 'h264_nvmpi',
+                     'ffmpeg_image_transport.profile': 'main',
+                     'ffmpeg_image_transport.preset': 'll',
+                     'ffmpeg_image_transport.gop': 15}]
+```
+
+
 ## License
 
 This software is issued under the Apache License Version 2.0.
