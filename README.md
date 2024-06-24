@@ -8,7 +8,7 @@ This package is a complete rewrite of an
 package.
 
 The publisher plugin of the transport produces 
-[ffmpeg image transport messages](https://github.com/ros-misc-utitilies/ffmpeg_image_transport_msgs).
+[ffmpeg image transport messages](https://github.com/ros-misc-utilities/ffmpeg_image_transport_msgs/).
 These are raw, encoded packets that are then transmitted and decoded by the
 subscriber plugin of the transport. The transport library 
 contains both the publisher(encoder) and subscriber(decoder) plugin
