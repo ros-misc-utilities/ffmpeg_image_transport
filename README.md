@@ -23,7 +23,8 @@ Continuous integration is tested under Ubuntu with the following ROS2 distros:
 
  [![Build Status](https://build.ros2.org/buildStatus/icon?job=Hdev__ffmpeg_image_transport__ubuntu_jammy_amd64&subject=Humble)](https://build.ros2.org/job/Hdev__ffmpeg_image_transport__ubuntu_jammy_amd64/)
  [![Build Status](https://build.ros2.org/buildStatus/icon?job=Idev__ffmpeg_image_transport__ubuntu_jammy_amd64&subject=Iron)](https://build.ros2.org/job/Idev__ffmpeg_image_transport__ubuntu_jammy_amd64/)
- [![Build Status](https://build.ros2.org/buildStatus/icon?job=Rdev__ffmpeg_image_transport__ubuntu_jammy_amd64&subject=Rolling)](https://build.ros2.org/job/Rdev__ffmpeg_image_transport__ubuntu_jammy_amd64/)
+ [![Build Status](https://build.ros2.org/buildStatus/icon?job=Jdev__ffmpeg_image_transport__ubuntu_noble_amd64&subject=Jazzy)](https://build.ros2.org/job/Jdev__ffmpeg_image_transport__ubuntu_noble_amd64/)
+[![Build Status](https://build.ros2.org/buildStatus/icon?job=Rdev__ffmpeg_image_transport__ubuntu_noble_amd64&subject=Rolling)](https://build.ros2.org/job/Rdev__ffmpeg_image_transport__ubuntu_noble_amd64/)
 
 
 ## Installation
@@ -71,20 +72,8 @@ The plugin has a few parameters that allow for some amount of control.
 
 ### Publisher (camera driver)
 
-- ``encoding``: Only ever tested: ``libx264``, ``h264_nvenc``, ``h264``, ``hevc_nvenc``, ``h264_vaapi``.
-  If you have an Nvidia card it most likely supports ``hevc_nvenc``.
-  This will dramatically reduce the CPU load compare to ``libx264`` (the default).
-  You can list all available codecs with ``ffmpeg -codecs``. In the relevant row,
-  look for what it says under ``(encoders)``.
-- ``preset``: For instance ``slow``, ``ll`` (low latency) etc.
-  To find out what presets are available, run e.g.
-  ``fmpeg -hide_banner -f lavfi -i nullsrc -c:v libx264 -preset help -f mp4 - 2>&1``
-- ``profile``: For instance ``baseline``, ``main``. See [the ffmpeg website](https://trac.ffmpeg.org/wiki/Encode/H.264).
-- ``tune``: See [the ffmpeg website](https://trac.ffmpeg.org/wiki/Encode/H.264).
-- ``gop_size``: The number of frames inbetween keyframes. Default is ``15``.
-  The larger this number the more latency you will have, but also the more efficient
-  the transmission becomes.
-- ``bit_rate``: The max bit rate [in bits/s] that the encoding will target. Default is ``8242880`.
+There are various ROS parameters to control the encoding. They are described
+in the [``ffmpeg_encoder_decoder`` repository](https://github.com/ros-misc-utilities/ffmpeg_encoder_decoder?tab=readme-ov-file#publisher-camera-driver).
 
 The parameters are under the ``ffmpeg_image_transport`` variable block. So if you launch
 your publisher node (camera driver), you can give it a parameter list on the way like so:
@@ -97,15 +86,15 @@ your publisher node (camera driver), you can give it a parameter list on the way
 
 ### Subscriber (viewer)
 
-The subscriber has only one parameter, which is the map between the encoding that was used
-to encode the frames, and the decoder to be used for decoding. The mapping is done via parameters.
+The subscriber has only one parameter (``map``), which is the map between the encoding that
+was used to encode the frames, and the libav decoder to be used for decoding. The mapping is done by creating entries in the ``ffmpeg_image_transport.map`` parameter.
 To tell the subscriber to use the ``hevc`` decoder instead of the default ``hevc_cuvid``
 decoder for decoding incoming ``hevc_nvenc`` packets set a parameter like so *after* you started the viewer:
 ```
 ros2 param set <name_of_your_viewer_node> ffmpeg_image_transport.map.hevc_nvenc hevc
 ```
 You also need to refresh the subscription (drop down menu in the viewer) for the parameter to take hold.
-If anyone ever figures out how to set the parameters when starting the viewer, please report back.
+If anyone ever figures out how to set the parameters *when* starting the viewer (rather than afterwards!), please update this document.
 
 
 ### Republishing

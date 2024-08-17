@@ -13,9 +13,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "ffmpeg_image_transport/ffmpeg_publisher.hpp"
-
-#include "ffmpeg_image_transport/safe_param.hpp"
+#include <ffmpeg_encoder_decoder/safe_param.hpp>
+#include <ffmpeg_image_transport/ffmpeg_publisher.hpp>
 
 using namespace std::placeholders;
 
@@ -25,7 +24,22 @@ FFMPEGPublisher::FFMPEGPublisher() : logger_(rclcpp::get_logger("FFMPEGPublisher
 
 FFMPEGPublisher::~FFMPEGPublisher() {}
 
-void FFMPEGPublisher::packetReady(const FFMPEGPacketConstPtr & pkt) { (*publishFunction_)(*pkt); }
+void FFMPEGPublisher::packetReady(
+  const std::string & frame_id, const rclcpp::Time & stamp, const std::string & codec,
+  uint32_t width, uint32_t height, uint64_t pts, uint8_t flags, uint8_t * data, size_t sz)
+{
+  auto msg = std::make_shared<FFMPEGPacket>();
+  msg->header.frame_id = frame_id;
+  msg->header.stamp = stamp;
+  msg->encoding = codec;
+  msg->width = width;
+  msg->height = height;
+  msg->pts = pts;
+  msg->flags = flags;
+  msg->data.assign(data, data + sz);
+
+  (*publishFunction_)(*msg);
+}
 
 #if defined(IMAGE_TRANSPORT_API_V1) || defined(IMAGE_TRANSPORT_API_V2)
 void FFMPEGPublisher::advertiseImpl(
@@ -48,9 +62,11 @@ rmw_qos_profile_t FFMPEGPublisher::initialize(rclcpp::Node * node, rmw_qos_profi
 {
   encoder_.setParameters(node);
   const std::string ns = "ffmpeg_image_transport.";
-  measurePerformance_ = get_safe_param<bool>(node, ns + "measure_performance", false);
+  measurePerformance_ =
+    ffmpeg_encoder_decoder::get_safe_param<bool>(node, ns + "measure_performance", false);
   encoder_.setMeasurePerformance(measurePerformance_);
-  performanceInterval_ = get_safe_param<int>(node, ns + "performance_interval", 175);
+  performanceInterval_ =
+    ffmpeg_encoder_decoder::get_safe_param<int>(node, ns + "performance_interval", 175);
 
   // bump queue size to 2 * distance between keyframes
   custom_qos.depth = std::max(static_cast<int>(custom_qos.depth), 2 * encoder_.getGOPSize());
@@ -63,7 +79,8 @@ void FFMPEGPublisher::publish(const Image & msg, const PublishFn & publish_fn) c
   if (!me->encoder_.isInitialized()) {
     me->publishFunction_ = &publish_fn;
     if (!me->encoder_.initialize(
-          msg.width, msg.height, std::bind(&FFMPEGPublisher::packetReady, me, _1))) {
+          msg.width, msg.height,
+          std::bind(&FFMPEGPublisher::packetReady, me, _1, _2, _3, _4, _5, _6, _7, _8, _9))) {
       RCLCPP_ERROR_STREAM(logger_, "cannot initialize encoder!");
       return;
     }

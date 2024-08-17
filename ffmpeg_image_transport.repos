@@ -3,3 +3,7 @@ repositories:
     type: git
     url: https://github.com/ros-misc-utilities/ffmpeg_image_transport_msgs.git
     version: master
+  src/ffmpeg_encoder_decoder:
+    type: git
+    url: https://github.com/ros-misc-utilities/ffmpeg_encoder_decoder.git
+    version: master

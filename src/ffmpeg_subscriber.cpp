@@ -13,12 +13,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "ffmpeg_image_transport/ffmpeg_subscriber.hpp"
-
+#include <ffmpeg_encoder_decoder/safe_param.hpp>
+#include <ffmpeg_image_transport/ffmpeg_publisher.hpp>
+#include <ffmpeg_image_transport/ffmpeg_subscriber.hpp>
 #include <functional>
 #include <unordered_map>
-
-#include "ffmpeg_image_transport/safe_param.hpp"
 
 using namespace std::placeholders;
 
@@ -60,14 +59,15 @@ void FFMPEGSubscriber::initialize(rclcpp::Node * node)
   node_ = node;
 
   // create parameters from default map
-  for (const auto & kv : FFMPEGDecoder::getDefaultEncoderToDecoderMap()) {
+  for (const auto & kv : ffmpeg_encoder_decoder::Decoder::getDefaultEncoderToDecoderMap()) {
     const std::string key = std::string(nsc) + kv.first;
     if (!node_->has_parameter(key)) {
       (void)node_->declare_parameter<std::string>(key, kv.second);
     }
   }
   const std::string ns(nsc);
-  const bool mp = get_safe_param<bool>(node_, ns + "measure_performance", false);
+  const bool mp =
+    ffmpeg_encoder_decoder::get_safe_param<bool>(node_, ns + "measure_performance", false);
   decoder_.setMeasurePerformance(mp);
 }
 
@@ -82,17 +82,21 @@ void FFMPEGSubscriber::internalCallback(const FFMPEGPacketConstPtr & msg, const 
       return;
     }
     userCallback_ = &user_cb;
-    const std::string decoder = get_safe_param<std::string>(node_, nsc + msg->encoding, "");
+    const std::string decoder =
+      ffmpeg_encoder_decoder::get_safe_param<std::string>(node_, nsc + msg->encoding, "");
     if (decoder.empty()) {
       RCLCPP_ERROR_STREAM(logger_, "no valid decoder found for encoding: " << msg->encoding);
       return;
     }
     if (!decoder_.initialize(
-          msg, std::bind(&FFMPEGSubscriber::frameReady, this, _1, _2), decoder)) {
+          msg->encoding, msg->width, msg->height,
+          std::bind(&FFMPEGSubscriber::frameReady, this, _1, _2), decoder)) {
       RCLCPP_ERROR_STREAM(logger_, "cannot initialize decoder!");
       return;
     }
   }
-  decoder_.decodePacket(msg);
+  decoder_.decodePacket(
+    msg->encoding, &msg->data[0], msg->data.size(), msg->pts, msg->header.frame_id,
+    msg->header.stamp);
 }
 }  // namespace ffmpeg_image_transport
