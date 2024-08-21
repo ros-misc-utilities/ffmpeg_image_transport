@@ -23,8 +23,6 @@ using namespace std::placeholders;
 
 namespace ffmpeg_image_transport
 {
-static const char nsc[] = "ffmpeg_image_transport.map.";
-
 FFMPEGSubscriber::FFMPEGSubscriber() : logger_(rclcpp::get_logger("FFMPEGSubscriber")) {}
 
 FFMPEGSubscriber::~FFMPEGSubscriber() {}
@@ -36,7 +34,7 @@ void FFMPEGSubscriber::subscribeImpl(
   rclcpp::Node * node, const std::string & base_topic, const Callback & callback,
   rmw_qos_profile_t custom_qos)
 {
-  initialize(node);
+  initialize(node, base_topic);
   FFMPEGSubscriberPlugin::subscribeImpl(node, base_topic, callback, custom_qos);
 }
 #else
@@ -44,7 +42,7 @@ void FFMPEGSubscriber::subscribeImpl(
   rclcpp::Node * node, const std::string & base_topic, const Callback & callback,
   rmw_qos_profile_t custom_qos, rclcpp::SubscriptionOptions opt)
 {
-  initialize(node);
+  initialize(node, base_topic);
 #ifdef IMAGE_TRANSPORT_API_V2
   (void)opt;  // to suppress compiler warning
   FFMPEGSubscriberPlugin::subscribeImpl(node, base_topic, callback, custom_qos);
@@ -54,20 +52,37 @@ void FFMPEGSubscriber::subscribeImpl(
 }
 #endif
 
-void FFMPEGSubscriber::initialize(rclcpp::Node * node)
+void FFMPEGSubscriber::initialize(rclcpp::Node * node, const std::string & base_topic)
 {
   node_ = node;
-
+  // Declare Parameters
+  uint ns_len = node->get_effective_namespace().length();
+  std::string param_base_name = base_topic.substr(ns_len);
+  std::replace(param_base_name.begin(), param_base_name.end(), '/', '.');
+  param_namespace_ = param_base_name + "." + getTransportName() + ".map.";
   // create parameters from default map
   for (const auto & kv : ffmpeg_encoder_decoder::Decoder::getDefaultEncoderToDecoderMap()) {
-    const std::string key = std::string(nsc) + kv.first;
-    if (!node_->has_parameter(key)) {
-      (void)node_->declare_parameter<std::string>(key, kv.second);
+    const std::string key = param_namespace_ + kv.first;
+    rclcpp::ParameterValue v;
+    try {
+      rcl_interfaces::msg::ParameterDescriptor pd;
+      pd.set__name(kv.first)
+        .set__type(rcl_interfaces::msg::ParameterType::PARAMETER_STRING)
+        .set__description("ffmpeg decoder map entry")
+        .set__read_only(false);
+      v = node->declare_parameter(key, rclcpp::ParameterValue(kv.second), pd);
+    } catch (const rclcpp::exceptions::ParameterAlreadyDeclaredException &) {
+      RCLCPP_DEBUG_STREAM(logger_, "was previously declared: " << kv.first);
+      v = node->get_parameter(key).get_parameter_value();
+    }
+    if (v.get<std::string>() != kv.second) {
+      RCLCPP_INFO_STREAM(
+        logger_, "overriding default decoder " << kv.second << " for " << kv.first << " with "
+                                               << v.get<std::string>());
     }
   }
-  const std::string ns(nsc);
-  const bool mp =
-    ffmpeg_encoder_decoder::get_safe_param<bool>(node_, ns + "measure_performance", false);
+  const bool mp = ffmpeg_encoder_decoder::get_safe_param<bool>(
+    node_, param_namespace_ + "measure_performance", false);
   decoder_.setMeasurePerformance(mp);
 }
 
@@ -82,15 +97,14 @@ void FFMPEGSubscriber::internalCallback(const FFMPEGPacketConstPtr & msg, const 
       return;
     }
     userCallback_ = &user_cb;
-    const std::string decoder =
-      ffmpeg_encoder_decoder::get_safe_param<std::string>(node_, nsc + msg->encoding, "");
+    const std::string decoder = ffmpeg_encoder_decoder::get_safe_param<std::string>(
+      node_, param_namespace_ + msg->encoding, "");
     if (decoder.empty()) {
       RCLCPP_ERROR_STREAM(logger_, "no valid decoder found for encoding: " << msg->encoding);
       return;
     }
     if (!decoder_.initialize(
-          msg->encoding, msg->width, msg->height,
-          std::bind(&FFMPEGSubscriber::frameReady, this, _1, _2), decoder)) {
+          msg->encoding, std::bind(&FFMPEGSubscriber::frameReady, this, _1, _2), decoder)) {
       RCLCPP_ERROR_STREAM(logger_, "cannot initialize decoder!");
       return;
     }

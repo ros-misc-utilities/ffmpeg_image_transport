@@ -1,11 +1,8 @@
-# ROS2 image transport for FFmpeg encoding
+# ROS2 image transport for ffmpeg/libav
 
-The ROS2 image transport supports encoding/decoding with the FFMpeg
+This ROS2 image transport plugin supports encoding/decoding with the FFMpeg
 library, for example encoding h264 and h265 or HEVC, using
 Nvidia or other hardware acceleration when available.
-This package is a complete rewrite of an
-[older ROS1 ffmpeg_image_transport](https://github.com/daniilidis-group/ffmpeg_image_transport)
-package.
 
 The publisher plugin of the transport produces 
 [ffmpeg image transport messages](https://github.com/ros-misc-utilities/ffmpeg_image_transport_msgs/).
@@ -68,31 +65,53 @@ the one that is decoding (viewing).
 
 ## Parameters
 
-The plugin has a few parameters that allow for some amount of control.
-
 ### Publisher (camera driver)
 
-There are various ROS parameters to control the encoding. They are described
-in the [``ffmpeg_encoder_decoder`` repository](https://github.com/ros-misc-utilities/ffmpeg_encoder_decoder?tab=readme-ov-file#publisher-camera-driver).
+Here is a list of the available encoding parameters:
 
-The parameters are under the ``ffmpeg_image_transport`` variable block. So if you launch
+- ``encoding``: the libav (ffmpeg) encoder being used. The default is ``libx264``, which is on-CPU unaccelerated encoding.
+  Depending on your hardware, your encoding options may include the hardware accelerated ``h264_nvenc`` or ``h264_vaapi``.
+  You can list all available encoders with ``ffmpeg --codecs``. In the h264 row, look for ``(encoders)``.
+- ``preset``: default is empty (""). Valid values can be for instance ``slow``, ``ll`` (low latency) etc.
+   To find out what presets are available, run e.g.
+   ``fmpeg -hide_banner -f lavfi -i nullsrc -c:v libx264 -preset help -f mp4 - 2>&1``
+- ``profile``: For instance ``baseline``, ``main``. See [the ffmpeg website](https://trac.ffmpeg.org/wiki/Encode/H.264).
+- ``tune``: See [the ffmpeg website](https://trac.ffmpeg.org/wiki/Encode/H.264). The default is empty("").
+- ``gop_size``: The number of frames between keyframes. Default: 10.
+   The larger this number the more latency you will have, but also the more efficient the compression becomes.
+- ``bit_rate``: The max bit rate [in bits/s] that the encoding will target. Default is ``8242880`.
+- ``delay``: Not sure what it does, but doesn't help with delay. Default is empty ("").
+- ``pixel_format``: Forces a different pixel format for internal conversions. Experimental, don't use.
+- ``qmax``: Max quantization rate. Defaults to 10. See [ffmpeg documentation](https://www.ffmpeg.org/ffmpeg-codecs.html).
+   The larger this number, the worse the image looks, and the more efficient the encoding.
+- ``measure_performance``: For performance debugging (developers only). Defaults to false.
+- ``performance_interval``: How many frames to wait between logging performance data.
+
+The parameters are under the ``ffmpeg`` variable block. If you launch
 your publisher node (camera driver), you can give it a parameter list on the way like so:
 ```
-        parameters=[{'ffmpeg_image_transport.encoding': 'hevc_nvenc',
-                     'ffmpeg_image_transport.profile': 'main',
-                     'ffmpeg_image_transport.preset': 'll',
-                     'ffmpeg_image_transport.gop': 15}]
+            parameters=[
+                {
+                    '.image_raw.ffmpeg.encoding': 'h264_vaapi',  # 'libx264'
+                    '.image_raw.ffmpeg.profile': 'main',
+                    '.image_raw.ffmpeg.preset': 'll',
+                },
+            ],
 ```
+See the example launch file for a V4L USB camera
 
 ### Subscriber (viewer)
 
 The subscriber has only one parameter (``map``), which is the map between the encoding that
-was used to encode the frames, and the libav decoder to be used for decoding. The mapping is done by creating entries in the ``ffmpeg_image_transport.map`` parameter.
-To tell the subscriber to use the ``hevc`` decoder instead of the default ``hevc_cuvid``
+was used to encode the frames, and the libav decoder to be used for decoding. The mapping is done by creating entries in the ``ffmpeg.map`` parameter, which is prefixed by the image base name, e.g. ``camera``.
+
+For example to tell the subscriber to use the ``hevc`` decoder instead of the default ``hevc_cuvid``
 decoder for decoding incoming ``hevc_nvenc`` packets set a parameter like so *after* you started the viewer:
 ```
-ros2 param set <name_of_your_viewer_node> ffmpeg_image_transport.map.hevc_nvenc hevc
+ros2 param set <name_of_your_viewer_node> camera.image_raw.ffmpeg.map.hevc_nvenc hevc
 ```
+This is assuming that your viewer node is subscribing to an image ``/camera/image_raw/ffmpeg``.
+
 You also need to refresh the subscription (drop down menu in the viewer) for the parameter to take hold.
 If anyone ever figures out how to set the parameters *when* starting the viewer (rather than afterwards!), please update this document.
 
@@ -105,9 +124,10 @@ Here the ROS parameters work as expected to modify the mapping between
 encoding and decoder.
 
 The following line shows how to specify the decoder when republishing.
-For example to decode incoming ``hevc_nvenc`` packets with the ``hevc`` decoder:
+For example to decode incoming ``hevc_nvenc`` packets on the base topic ``camera/image_raw`` with the ``hevc`` decoder:
+
 ```
-ros2 run image_transport republish ffmpeg in/ffmpeg:=image_raw/ffmpeg raw out:=image_raw/uncompressed --ros-args -p "ffmpeg_image_transport.map.hevc_nvenc:=hevc"
+ros2 run image_transport republish ffmpeg raw --ros-args -r in/ffmpeg:=/camera/image_raw/ffmpeg -r out:=/camera/image_raw/uncompressed -p "in.ffmpeg.map.h264_nvenc:=hevc"
 ```
 
 Republishing is generally not necessary so long as publisher and subscriber both properly use
@@ -118,9 +138,9 @@ rendering republishing necessary.
 
 Suppose you have raw images in a rosbag but want to play them across a network using
 the ``ffmpeg_image_transport``. In this case run a republish node like this
-(assuming your rosbag topic is ``/my_camera/image_raw``):
+(assuming your rosbag topic is ``/camera/image_raw``):
 ```
-ros2 run image_transport republish raw in:=/my_camera/image_raw
+ros2 run image_transport republish raw in:=/camera/image_raw
 ```
 The republished topic will be under a full transport, meaning you can now view them with e.g. ``rqt_image_view`` under the topic ``/out/ffmpeg``.
 
@@ -128,9 +148,9 @@ You can record them in ``ffmpeg`` format by e.g ``ros2 bag record /out/ffmpeg``.
 
 #### Republishing compressed images from rosbags
 
-Let's say you have stored images as ffmpeg packets in a rosbag under the topic ``/my_camera/ffmpeg``. To view them use this line:
+Let's say you have stored images as ffmpeg packets in a rosbag under the topic ``/camera/image_raw/ffmpeg``. To view them use this line:
 ```
-ros2 run image_transport republish ffmpeg in/ffmpeg:=/my_camera/ffmpeg raw
+ros2 run image_transport republish ffmpeg --ros-args -r in/ffmpeg:=/camera/image_raw/ffmpeg
 
 ```
 This will republish the topic with full image transport support.
@@ -143,36 +163,7 @@ how to set encoding profile and preset for e.g. a usb camera.
 
 ### How to use a custom version of libav (aka ffmpeg)
 
-Compile *and install* ffmpeg. Let's say the install directory is
-``/home/foo/ffmpeg/build``, then for it to be found while building,
-run colcon like this:
-```
-colcon build --symlink-install --cmake-args --no-warn-unused-cli -DFFMPEG_PKGCONFIG=/home/foo/ffmpeg/build/lib/pkgconfig -DCMAKE_BUILD_TYPE=RelWithDebInfo 
-```
-
-This will compile against the right headers, but at runtime it may
-still load the system ffmpeg libraries. To avoid that, set
-``LD_LIBRARY_PATH`` at runtime:
-```
-export LD_LIBRARY_PATH=/home/foo/ffmpeg/build/lib:${LD_LIBRARY_PATH}
-```
-
-### How to use ffmpeg hardware accelerated encoding on the NVidia Jetson
-
-Follow the instructions
-[here](https://github.com/jocover/jetson-ffmpeg) to build a version of
-ffmpeg that supports NVMPI. Then follow the section above on how to
-actually use that custom ffmpeg library. As always first test on the
-CLI that the newly compiled ``ffmpeg`` command now supports
-``h264_nvmpi``. The transport can now be configured to use
-nvmpi like so:
-
-```
-        parameters=[{'ffmpeg_image_transport.encoding': 'h264_nvmpi',
-                     'ffmpeg_image_transport.profile': 'main',
-                     'ffmpeg_image_transport.preset': 'll',
-                     'ffmpeg_image_transport.gop': 15}]
-```
+See the [``ffmpeg_encoder_decoder`` repository](https://github.com/ros-misc-utilities/ffmpeg_encoder_decoder).
 
 
 ## License

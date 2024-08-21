@@ -48,15 +48,15 @@ def generate_launch_description():
             executable='usb_cam_node_exe',
             output='screen',
             name=node_name,
+            namespace='camera',
             parameters=[
                 params_path,
                 {
-                    'ffmpeg_image_transport.encoding': 'h264_vaapi',
-                    # 'ffmpeg_image_transport.encoding': 'libx264',
-                    # 'ffmpeg_image_transport.encoding': 'hevc_nvenc',
-                    'ffmpeg_image_transport.profile': 'main',
-                    'ffmpeg_image_transport.preset': 'll',
-                    'ffmpeg_image_transport.gop': 15,
+                    '.image_raw.ffmpeg.encoding': 'h264_nvenc',
+                    '.image_raw.ffmpeg.profile': 'main',
+                    '.image_raw.ffmpeg.preset': 'll',
+                    '.image_raw.ffmpeg.gop': 15,
+                    '.image_raw.ffmpeg.qmax': 31,
                 },
             ],
         )

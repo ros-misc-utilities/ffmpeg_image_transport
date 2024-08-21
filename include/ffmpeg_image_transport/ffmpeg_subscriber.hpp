@@ -52,13 +52,14 @@ protected:
 
 private:
   void frameReady(const ImageConstPtr & img, bool /*isKeyFrame*/) const;
-  void initialize(rclcpp::Node * node);
+  void initialize(rclcpp::Node * node, const std::string & base_topics);
   // -------------- variables
   rclcpp::Logger logger_;
   rclcpp::Node * node_;
   ffmpeg_encoder_decoder::Decoder decoder_;
   std::string decoderType_;
   const Callback * userCallback_;
+  std::string param_namespace_;
 };
 }  // namespace ffmpeg_image_transport
 #endif  // FFMPEG_IMAGE_TRANSPORT__FFMPEG_SUBSCRIBER_HPP_

@@ -32,6 +32,14 @@ using FFMPEGPacketConstPtr = FFMPEGPacket::ConstSharedPtr;
 class FFMPEGPublisher : public FFMPEGPublisherPlugin
 {
 public:
+  using ParameterDescriptor = rcl_interfaces::msg::ParameterDescriptor;
+  using ParameterValue = rclcpp::ParameterValue;
+  struct ParameterDefinition
+  {
+    ParameterValue defaultValue;
+    ParameterDescriptor descriptor;
+  };
+
   FFMPEGPublisher();
   ~FFMPEGPublisher() override;
   std::string getTransportName() const override { return "ffmpeg"; }
@@ -52,7 +60,10 @@ private:
     const std::string & frame_id, const rclcpp::Time & stamp, const std::string & codec,
     uint32_t width, uint32_t height, uint64_t pts, uint8_t flags, uint8_t * data, size_t sz);
 
-  rmw_qos_profile_t initialize(rclcpp::Node * node, rmw_qos_profile_t custom_qos);
+  rmw_qos_profile_t initialize(
+    rclcpp::Node * node, const std::string & base_name, rmw_qos_profile_t custom_qos);
+  void declareParameter(
+    rclcpp::Node * node, const std::string & base_name, const ParameterDefinition & definition);
   // variables ---------
   rclcpp::Logger logger_;
   const PublishFn * publishFunction_{NULL};
