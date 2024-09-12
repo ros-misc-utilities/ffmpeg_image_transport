@@ -115,11 +115,18 @@ see for instance [here](https://gitlab.com/boldhearts/ros2_v4l2_camera/-/blob/fo
 Here the ROS parameters work as expected to modify the mapping between
 encoding and decoder.
 
-The following line shows how to specify the decoder when republishing.
+The following lines shows how to specify the decoder when republishing.
 For example to decode incoming ``hevc_nvenc`` packets with the ``hevc`` decoder:
-```
-ros2 run image_transport republish ffmpeg in/ffmpeg:=image_raw/ffmpeg raw out:=image_raw/uncompressed --ros-args -p "ffmpeg_image_transport.map.hevc_nvenc:=hevc"
-```
+
+- ROS 2 Humble:
+  ```
+  ros2 run image_transport republish ffmpeg in/ffmpeg:=image_raw/ffmpeg raw out:=image_raw/uncompressed --ros-args -p "ffmpeg_image_transport.map.hevc_nvenc:=hevc"
+  ```
+- ROS 2 Jazzy:
+  ```
+  ros2 run image_transport republish --ros-args -p in_transport:=ffmpeg -p out_transport:=raw --remap in/ffmpeg:=image_raw/ffmpeg --remap out:=image_raw/uncompressed -p "ffmpeg_image_transport.map.hevc_nvenc:=hevc"
+  ```
+  Note: The commands below use the Humble syntax and need to be changed as shown here for Jazzy.
 
 Republishing is generally not necessary so long as publisher and subscriber both properly use
 an image transport. Some nodes however, notably the rosbag player, do not support a proper transport,
