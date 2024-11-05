@@ -138,6 +138,7 @@ private:
   std::string preset_;     // e.g. "slow", "medium", "lossless"
   std::string profile_;    // e.g. "main", "high", "rext"
   std::string tune_;       // e.g. "tune"
+  std::string crf_;        // Range is [0, 51]; 0 is lossless, 23 is default, 51 is worst quality.
   std::string delay_;      // default is 4 frames for parallel processing. 0 is lowest latency
   int qmax_{0};            // max allowed quantization. The lower the better quality
   int GOPSize_{15};        // distance between two keyframes

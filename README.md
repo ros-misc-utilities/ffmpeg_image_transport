@@ -84,7 +84,8 @@ The plugin has a few parameters that allow for some amount of control.
 - ``gop_size``: The number of frames inbetween keyframes. Default is ``15``.
   The larger this number the more latency you will have, but also the more efficient
   the transmission becomes.
-- ``bit_rate``: The max bit rate [in bits/s] that the encoding will target. Default is ``8242880`.
+- ``bit_rate``: The max bit rate [in bits/s] that the encoding will target. Default is ``8242880``.
+- ``crf``: Constant Rate Factor, affects the image quality. Value range is ``[0, 51]``; ``0`` is lossless, ``23`` is default, ``51`` is worst quality.
 
 The parameters are under the ``ffmpeg_image_transport`` variable block. So if you launch
 your publisher node (camera driver), you can give it a parameter list on the way like so:
@@ -92,7 +93,7 @@ your publisher node (camera driver), you can give it a parameter list on the way
         parameters=[{'ffmpeg_image_transport.encoding': 'hevc_nvenc',
                      'ffmpeg_image_transport.profile': 'main',
                      'ffmpeg_image_transport.preset': 'll',
-                     'ffmpeg_image_transport.gop': 15}]
+                     'ffmpeg_image_transport.gop_size': 15}]
 ```
 
 ### Subscriber (viewer)
@@ -189,7 +190,7 @@ nvmpi like so:
         parameters=[{'ffmpeg_image_transport.encoding': 'h264_nvmpi',
                      'ffmpeg_image_transport.profile': 'main',
                      'ffmpeg_image_transport.preset': 'll',
-                     'ffmpeg_image_transport.gop': 15}]
+                     'ffmpeg_image_transport.gop_size': 15}]
 ```
 
 
