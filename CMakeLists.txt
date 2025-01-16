@@ -55,6 +55,9 @@ pkg_check_modules(LIBAV REQUIRED IMPORTED_TARGET
 
 ###### Cuda ######
 set(CMAKE_CUDA_COMPILER /usr/bin/nvcc)
+set(CUDA_TOOLKIT_ROOT_DIR /usr/lib/cuda)
+set(ENV{CUDA_TOOLKIT_ROOT_DIR} /usr/lib/cuda)
+set(ENV{CUDA_BIN_PATH} /usr/lib/cuda/bin)
 set(CUDA_LIBRARIES "libcuda.so")
 enable_language(CUDA)
 find_package(CUDA  REQUIRED)
