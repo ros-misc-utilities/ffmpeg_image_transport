@@ -259,7 +259,13 @@ bool FFMPEGDecoder::decodePacket(const FFMPEGPacketConstPtr & msg)
       image->header = msg->header;
       image->header.stamp = it->second;
       ptsToStamp_.erase(it);
-      callback_(image, decodedFrame_->key_frame == 1);  // deliver callback
+      // deliver callback
+#ifdef AV_FRAME_FLAG_KEY
+      const bool isKeyFrame = (decodedFrame_->flags & AV_FRAME_FLAG_KEY) != 0;
+#else
+      const bool isKeyFrame = decodedFrame_->key_frame == 1;
+#endif
+      callback_(image, isKeyFrame);
     }
   }
   av_packet_unref(packet);

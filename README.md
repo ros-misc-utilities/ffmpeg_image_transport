@@ -8,7 +8,7 @@ This package is a complete rewrite of an
 package.
 
 The publisher plugin of the transport produces 
-[ffmpeg image transport messages](https://github.com/ros-misc-utitilies/ffmpeg_image_transport_msgs).
+[ffmpeg image transport messages](https://github.com/ros-misc-utilities/ffmpeg_image_transport_msgs/).
 These are raw, encoded packets that are then transmitted and decoded by the
 subscriber plugin of the transport. The transport library 
 contains both the publisher(encoder) and subscriber(decoder) plugin
@@ -22,8 +22,8 @@ To extract e.g. frames or an mp4 file from a recorded bag, have a look at the
 Continuous integration is tested under Ubuntu with the following ROS2 distros:
 
  [![Build Status](https://build.ros2.org/buildStatus/icon?job=Hdev__ffmpeg_image_transport__ubuntu_jammy_amd64&subject=Humble)](https://build.ros2.org/job/Hdev__ffmpeg_image_transport__ubuntu_jammy_amd64/)
- [![Build Status](https://build.ros2.org/buildStatus/icon?job=Idev__ffmpeg_image_transport__ubuntu_jammy_amd64&subject=Iron)](https://build.ros2.org/job/Idev__ffmpeg_image_transport__ubuntu_jammy_amd64/)
- [![Build Status](https://build.ros2.org/buildStatus/icon?job=Rdev__ffmpeg_image_transport__ubuntu_jammy_amd64&subject=Rolling)](https://build.ros2.org/job/Rdev__ffmpeg_image_transport__ubuntu_jammy_amd64/)
+ [![Build Status](https://build.ros2.org/buildStatus/icon?job=Jdev__ffmpeg_image_transport__ubuntu_noble_amd6464&subject=Jazzy)](https://build.ros2.org/job/Jdev__ffmpeg_image_transport__ubuntu_noble_amd64/)
+ [![Build Status](https://build.ros2.org/buildStatus/icon?job=Rdev__ffmpeg_image_transport__ubuntu_noble_amd64&subject=Rolling)](https://build.ros2.org/job/Rdev__ffmpeg_image_transport__ubuntu_noble_amd64/)
 
 
 ## Installation
@@ -84,7 +84,8 @@ The plugin has a few parameters that allow for some amount of control.
 - ``gop_size``: The number of frames inbetween keyframes. Default is ``15``.
   The larger this number the more latency you will have, but also the more efficient
   the transmission becomes.
-- ``bit_rate``: The max bit rate [in bits/s] that the encoding will target. Default is ``8242880`.
+- ``bit_rate``: The max bit rate [in bits/s] that the encoding will target. Default is ``8242880``.
+- ``crf``: Constant Rate Factor, affects the image quality. Value range is ``[0, 51]``; ``0`` is lossless, ``23`` is default, ``51`` is worst quality.
 
 The parameters are under the ``ffmpeg_image_transport`` variable block. So if you launch
 your publisher node (camera driver), you can give it a parameter list on the way like so:
@@ -92,7 +93,7 @@ your publisher node (camera driver), you can give it a parameter list on the way
         parameters=[{'ffmpeg_image_transport.encoding': 'hevc_nvenc',
                      'ffmpeg_image_transport.profile': 'main',
                      'ffmpeg_image_transport.preset': 'll',
-                     'ffmpeg_image_transport.gop': 15}]
+                     'ffmpeg_image_transport.gop_size': 15}]
 ```
 
 ### Subscriber (viewer)
@@ -115,11 +116,18 @@ see for instance [here](https://gitlab.com/boldhearts/ros2_v4l2_camera/-/blob/fo
 Here the ROS parameters work as expected to modify the mapping between
 encoding and decoder.
 
-The following line shows how to specify the decoder when republishing.
+The following lines shows how to specify the decoder when republishing.
 For example to decode incoming ``hevc_nvenc`` packets with the ``hevc`` decoder:
-```
-ros2 run image_transport republish ffmpeg in/ffmpeg:=image_raw/ffmpeg raw out:=image_raw/uncompressed --ros-args -p "ffmpeg_image_transport.map.hevc_nvenc:=hevc"
-```
+
+- ROS 2 Humble:
+  ```
+  ros2 run image_transport republish ffmpeg in/ffmpeg:=image_raw/ffmpeg raw out:=image_raw/uncompressed --ros-args -p "ffmpeg_image_transport.map.hevc_nvenc:=hevc"
+  ```
+- ROS 2 Jazzy:
+  ```
+  ros2 run image_transport republish --ros-args -p in_transport:=ffmpeg -p out_transport:=raw --remap in/ffmpeg:=image_raw/ffmpeg --remap out:=image_raw/uncompressed -p "ffmpeg_image_transport.map.hevc_nvenc:=hevc"
+  ```
+  Note: The commands below use the Humble syntax and need to be changed as shown here for Jazzy.
 
 Republishing is generally not necessary so long as publisher and subscriber both properly use
 an image transport. Some nodes however, notably the rosbag player, do not support a proper transport,
@@ -167,6 +175,24 @@ still load the system ffmpeg libraries. To avoid that, set
 ```
 export LD_LIBRARY_PATH=/home/foo/ffmpeg/build/lib:${LD_LIBRARY_PATH}
 ```
+
+### How to use ffmpeg hardware accelerated encoding on the NVidia Jetson
+
+Follow the instructions
+[here](https://github.com/jocover/jetson-ffmpeg) to build a version of
+ffmpeg that supports NVMPI. Then follow the section above on how to
+actually use that custom ffmpeg library. As always first test on the
+CLI that the newly compiled ``ffmpeg`` command now supports
+``h264_nvmpi``. The transport can now be configured to use
+nvmpi like so:
+
+```
+        parameters=[{'ffmpeg_image_transport.encoding': 'h264_nvmpi',
+                     'ffmpeg_image_transport.profile': 'main',
+                     'ffmpeg_image_transport.preset': 'll',
+                     'ffmpeg_image_transport.gop_size': 15}]
+```
+
 
 ## License
 
