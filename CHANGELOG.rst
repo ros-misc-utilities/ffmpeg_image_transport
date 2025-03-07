@@ -2,8 +2,8 @@
 Changelog for package ffmpeg_image_transport
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.0.2 (2025-03-07)
+------------------
 * updated badges and fixed deprecation warnings (`#36 <https://github.com/ros-misc-utilities/ffmpeg_image_transport/issues/36>`_)
   * updated badges and fixed deprecation warnings
   * only use AV_FRAME_FLAG_KEY when available
