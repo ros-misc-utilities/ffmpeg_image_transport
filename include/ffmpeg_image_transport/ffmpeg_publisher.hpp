@@ -16,19 +16,30 @@
 #ifndef FFMPEG_IMAGE_TRANSPORT__FFMPEG_PUBLISHER_HPP_
 #define FFMPEG_IMAGE_TRANSPORT__FFMPEG_PUBLISHER_HPP_
 
+#include <ffmpeg_encoder_decoder/encoder.hpp>
+#include <ffmpeg_image_transport_msgs/msg/ffmpeg_packet.hpp>
 #include <image_transport/simple_publisher_plugin.hpp>
 #include <memory>
-
-#include "ffmpeg_image_transport/ffmpeg_encoder.hpp"
-#include "ffmpeg_image_transport/types.hpp"
+#include <sensor_msgs/msg/image.hpp>
 
 namespace ffmpeg_image_transport
 {
+using ffmpeg_image_transport_msgs::msg::FFMPEGPacket;
 using FFMPEGPublisherPlugin = image_transport::SimplePublisherPlugin<FFMPEGPacket>;
+using Image = sensor_msgs::msg::Image;
+using FFMPEGPacketConstPtr = FFMPEGPacket::ConstSharedPtr;
 
 class FFMPEGPublisher : public FFMPEGPublisherPlugin
 {
 public:
+  using ParameterDescriptor = rcl_interfaces::msg::ParameterDescriptor;
+  using ParameterValue = rclcpp::ParameterValue;
+  struct ParameterDefinition
+  {
+    ParameterValue defaultValue;
+    ParameterDescriptor descriptor;
+  };
+
   FFMPEGPublisher();
   ~FFMPEGPublisher() override;
   std::string getTransportName() const override { return "ffmpeg"; }
@@ -45,12 +56,18 @@ protected:
   void publish(const Image & message, const PublishFn & publish_fn) const override;
 
 private:
-  void packetReady(const FFMPEGPacketConstPtr & pkt);
-  rmw_qos_profile_t initialize(rclcpp::Node * node, rmw_qos_profile_t custom_qos);
+  void packetReady(
+    const std::string & frame_id, const rclcpp::Time & stamp, const std::string & codec,
+    uint32_t width, uint32_t height, uint64_t pts, uint8_t flags, uint8_t * data, size_t sz);
+
+  rmw_qos_profile_t initialize(
+    rclcpp::Node * node, const std::string & base_name, rmw_qos_profile_t custom_qos);
+  void declareParameter(
+    rclcpp::Node * node, const std::string & base_name, const ParameterDefinition & definition);
   // variables ---------
   rclcpp::Logger logger_;
   const PublishFn * publishFunction_{NULL};
-  FFMPEGEncoder encoder_;
+  ffmpeg_encoder_decoder::Encoder encoder_;
   uint32_t frameCounter_{0};
   // ---------- configurable parameters
   int performanceInterval_{175};  // num frames between perf printouts
