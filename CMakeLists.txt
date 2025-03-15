@@ -8,7 +8,7 @@ if(NOT CMAKE_CXX_STANDARD)
 endif()
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-  add_compile_options(-Wall -Wextra -Wpedantic)
+  add_compile_options(-Wall -Wextra -Wpedantic -Werror)
 endif()
 
 # the image transport api changed between distros
@@ -27,35 +27,15 @@ endif()
 
 find_package(ament_cmake REQUIRED)
 find_package(ament_cmake_ros REQUIRED)
+find_package(ffmpeg_image_transport_msgs REQUIRED)
+find_package(ffmpeg_encoder_decoder REQUIRED)
 find_package(image_transport REQUIRED)
-find_package(cv_bridge REQUIRED)
 find_package(pluginlib REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rcutils REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(std_msgs REQUIRED)
-find_package(ffmpeg_image_transport_msgs REQUIRED)
 
-if(${cv_bridge_VERSION} GREATER "3.3.0")
-  add_definitions(-DUSE_CV_BRIDGE_HPP)
-endif()
-
-find_package(OpenCV REQUIRED imgproc)
-
-set(FFMPEG_PKGCONFIG "" CACHE STRING "extra path to pkgconfig")
-if("${FFMPEG_PKGCONFIG}" STREQUAL "")
-else()
-  message(WARNING "using FFMPEG package from ${FFMPEG_PKGCONFIG}")
-endif()
-
-set(ENV{PKG_CONFIG_PATH} ${FFMPEG_PKGCONFIG})
-find_package(PkgConfig REQUIRED)
-
-pkg_check_modules(LIBAV REQUIRED IMPORTED_TARGET
-    libavcodec
-    libswresample
-    libswscale
-    libavutil)
 
 set(LIBRARY_NAME ${PROJECT_NAME}_component)
 
@@ -64,10 +44,6 @@ add_library(
   SHARED
   src/ffmpeg_publisher.cpp
   src/ffmpeg_subscriber.cpp
-  src/ffmpeg_encoder.cpp
-  src/ffmpeg_decoder.cpp
-  src/tdiff.cpp
-  src/utils.cpp
   src/manifest.cpp)
 
 target_include_directories(${LIBRARY_NAME} PUBLIC
@@ -76,37 +52,21 @@ target_include_directories(${LIBRARY_NAME} PUBLIC
 
 ament_target_dependencies(${LIBRARY_NAME}
 PUBLIC
-  cv_bridge
   image_transport
   pluginlib
   rclcpp
   sensor_msgs
+  ffmpeg_encoder_decoder
   ffmpeg_image_transport_msgs)
 
-target_link_libraries(${LIBRARY_NAME}
-  PUBLIC
-    opencv_imgproc
-    PkgConfig::LIBAV)
-
-
-add_executable(test_encoder
-  test/test_encoder.cpp)
-
-target_link_libraries(test_encoder ${LIBRARY_NAME})
-target_include_directories(test_encoder PRIVATE include)
-ament_target_dependencies(test_encoder cv_bridge rclcpp sensor_msgs ffmpeg_image_transport_msgs)
-
-
 ament_export_dependencies(
-  OpenCV
-  LIBAV
-  cv_bridge
   image_transport
   pluginlib
   rclcpp
   rcutils
   sensor_msgs
   std_msgs
+  ffmpeg_encoder_decoder
   ffmpeg_image_transport_msgs)
 
 install(TARGETS ${LIBRARY_NAME}
@@ -115,10 +75,6 @@ install(TARGETS ${LIBRARY_NAME}
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION bin
   INCLUDES DESTINATION include)
-
-install(TARGETS test_encoder
-  LIBRARY DESTINATION lib
-  RUNTIME DESTINATION bin)
 
 ament_export_include_directories(include)
 ament_export_libraries(${LIBRARY_NAME})
@@ -162,5 +118,5 @@ if(BUILD_TESTING)
   ament_xmllint()
 endif()
 
-ament_package(CONFIG_EXTRAS cmake/${PROJECT_NAME}-extras.cmake.in)
+ament_package()
 
