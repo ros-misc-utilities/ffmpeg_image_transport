@@ -47,6 +47,11 @@ static const ParameterDefinition params[] = {
                          .set__description("ffmpeg encoder delay")
                          .set__read_only(false)},
   {ParameterValue(""), ParameterDescriptor()
+                         .set__name("crf")
+                         .set__type(rcl_interfaces::msg::ParameterType::PARAMETER_STRING)
+                         .set__description("constant rate factor")
+                         .set__read_only(false)},
+  {ParameterValue(""), ParameterDescriptor()
                          .set__name("pixel_format")
                          .set__type(rcl_interfaces::msg::ParameterType::PARAMETER_STRING)
                          .set__description("pixel format to use for encoding")
@@ -126,6 +131,8 @@ void FFMPEGPublisher::declareParameter(
     encoder_.setTune(v.get<std::string>());
   } else if (n == "delay") {
     encoder_.setDelay(v.get<std::string>());
+  } else if (n == "crf") {
+    encoder_.setCRF(v.get<std::string>());
   } else if (n == "pixel_format") {
     encoder_.setPixelFormat(v.get<std::string>());
   } else if (n == "qmax") {
