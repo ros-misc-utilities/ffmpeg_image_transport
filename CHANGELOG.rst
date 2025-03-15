@@ -2,6 +2,13 @@
 Changelog for package ffmpeg_image_transport
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* use ffmpeg_encoder_decoder
+* align parameter handling with compressed image transport
+* point to new instructions
+* Contributors: Bernd Pfrommer
+
 1.0.2 (2025-03-07)
 ------------------
 * updated badges and fixed deprecation warnings (`#36 <https://github.com/ros-misc-utilities/ffmpeg_image_transport/issues/36>`_)
