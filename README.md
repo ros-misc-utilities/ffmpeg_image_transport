@@ -127,11 +127,11 @@ For example to decode incoming ``hevc_nvenc`` packets with the ``hevc`` decoder:
   ```
   ros2 run image_transport republish --ros-args -p in_transport:=ffmpeg -p out_transport:=raw --remap in/ffmpeg:=image_raw/ffmpeg --remap out:=image_raw/uncompressed -p "ffmpeg_image_transport.map.hevc_nvenc:=hevc"
   ```
-  Note: The commands below use the Humble syntax and need to be changed as shown here for Jazzy.
+
+Note: The commands below use the Humble syntax and need to be changed as shown here for Jazzy.
 
 Republishing is generally not necessary so long as publisher and subscriber both properly use
-an image transport. Some nodes however, notably the rosbag player, do not support a proper transport,
-rendering republishing necessary.
+an image transport. Some nodes however, notably the rosbag player, do not support a proper transport, rendering republishing necessary.
 
 #### Republishing raw images from rosbags in ffmpeg format
 
@@ -179,11 +179,17 @@ export LD_LIBRARY_PATH=/home/foo/ffmpeg/build/lib:${LD_LIBRARY_PATH}
 ### How to use ffmpeg hardware accelerated encoding on the NVidia Jetson
 
 Follow the instructions
-[here](https://github.com/jocover/jetson-ffmpeg) to build a version of
-ffmpeg that supports NVMPI. Then follow the section above on how to
+[here](https://github.com/Keylost/jetson-ffmpeg) to build a version of
+ffmpeg that supports NVMPI. This long magic line should build a nvmpi enabled
+version of ffmpeg and install it under ``/usr/local/``:
+```
+git clone https://github.com/berndpfrommer/jetson-ffmpeg.git && cd jetson-ffmpeg && mkdir build && cd build && cmake -DCMAKE_INSTALL_PREFIX:PATH=/usr/local .. && make install && ldconfig && cd ../.. && git clone git://source.ffmpeg.org/ffmpeg.git -b release/7.1 --depth=1 &&cd jetson-ffmpeg && ./ffpatch.sh ../ffmpeg && cd ../ffmpeg && ./configure --enable-nvmpi --enable-shared --disable-static --prefix=/usr/local && make install
+```
+
+Then follow the section above on how to
 actually use that custom ffmpeg library. As always first test on the
 CLI that the newly compiled ``ffmpeg`` command now supports
-``h264_nvmpi``. The transport can now be configured to use
+``h264_nvmpi``. The transport can then be configured to use
 nvmpi like so:
 
 ```
