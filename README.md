@@ -19,9 +19,8 @@ To extract e.g. frames or an mp4 file from a recorded bag, have a look at the
 Continuous integration is tested under Ubuntu with the following ROS2 distros:
 
  [![Build Status](https://build.ros2.org/buildStatus/icon?job=Hdev__ffmpeg_image_transport__ubuntu_jammy_amd64&subject=Humble)](https://build.ros2.org/job/Hdev__ffmpeg_image_transport__ubuntu_jammy_amd64/)
- [![Build Status](https://build.ros2.org/buildStatus/icon?job=Idev__ffmpeg_image_transport__ubuntu_jammy_amd64&subject=Iron)](https://build.ros2.org/job/Idev__ffmpeg_image_transport__ubuntu_jammy_amd64/)
- [![Build Status](https://build.ros2.org/buildStatus/icon?job=Jdev__ffmpeg_image_transport__ubuntu_noble_amd64&subject=Jazzy)](https://build.ros2.org/job/Jdev__ffmpeg_image_transport__ubuntu_noble_amd64/)
-[![Build Status](https://build.ros2.org/buildStatus/icon?job=Rdev__ffmpeg_image_transport__ubuntu_noble_amd64&subject=Rolling)](https://build.ros2.org/job/Rdev__ffmpeg_image_transport__ubuntu_noble_amd64/)
+ [![Build Status](https://build.ros2.org/buildStatus/icon?job=Jdev__ffmpeg_image_transport__ubuntu_noble_amd6464&subject=Jazzy)](https://build.ros2.org/job/Jdev__ffmpeg_image_transport__ubuntu_noble_amd64/)
+ [![Build Status](https://build.ros2.org/buildStatus/icon?job=Rdev__ffmpeg_image_transport__ubuntu_noble_amd64&subject=Rolling)](https://build.ros2.org/job/Rdev__ffmpeg_image_transport__ubuntu_noble_amd64/)
 
 
 ## Installation
@@ -79,7 +78,8 @@ Here is a list of the available encoding parameters:
 - ``tune``: See [the ffmpeg website](https://trac.ffmpeg.org/wiki/Encode/H.264). The default is empty("").
 - ``gop_size``: The number of frames between keyframes. Default: 10.
    The larger this number the more latency you will have, but also the more efficient the compression becomes.
-- ``bit_rate``: The max bit rate [in bits/s] that the encoding will target. Default is ``8242880`.
+- ``bit_rate``: The max bit rate [in bits/s] that the encoding will target. Default is ``8242880``.
+- ``crf``: Constant Rate Factor, affects the image quality. Value range is ``[0, 51]``; ``0`` is lossless, ``23`` is default, ``51`` is worst quality.
 - ``delay``: Not sure what it does, but doesn't help with delay. Default is empty ("").
 - ``pixel_format``: Forces a different pixel format for internal conversions. Experimental, don't use.
 - ``qmax``: Max quantization rate. Defaults to 10. See [ffmpeg documentation](https://www.ffmpeg.org/ffmpeg-codecs.html).
@@ -90,13 +90,10 @@ Here is a list of the available encoding parameters:
 The parameters are under the ``ffmpeg`` variable block. If you launch
 your publisher node (camera driver), you can give it a parameter list on the way like so:
 ```
-            parameters=[
-                {
-                    '.image_raw.ffmpeg.encoding': 'h264_vaapi',  # 'libx264'
-                    '.image_raw.ffmpeg.profile': 'main',
-                    '.image_raw.ffmpeg.preset': 'll',
-                },
-            ],
+        parameters=[{'ffmpeg_image_transport.encoding': 'hevc_nvenc',
+                     'ffmpeg_image_transport.profile': 'main',
+                     'ffmpeg_image_transport.preset': 'll',
+                     'ffmpeg_image_transport.gop_size': 15}]
 ```
 See the example launch file for a V4L USB camera
 
@@ -123,16 +120,22 @@ see for instance [here](https://gitlab.com/boldhearts/ros2_v4l2_camera/-/blob/fo
 Here the ROS parameters work as expected to modify the mapping between
 encoding and decoder.
 
-The following line shows how to specify the decoder when republishing.
-For example to decode incoming ``hevc_nvenc`` packets on the base topic ``camera/image_raw`` with the ``hevc`` decoder:
+The following lines shows how to specify the decoder when republishing.
+For example to decode incoming ``hevc_nvenc`` packets with the ``hevc`` decoder:
 
-```
-ros2 run image_transport republish ffmpeg raw --ros-args -r in/ffmpeg:=/camera/image_raw/ffmpeg -r out:=/camera/image_raw/uncompressed -p "in.ffmpeg.map.h264_nvenc:=hevc"
-```
+- ROS 2 Humble:
+  ```
+  ros2 run image_transport republish ffmpeg in/ffmpeg:=image_raw/ffmpeg raw out:=image_raw/uncompressed --ros-args -p "ffmpeg_image_transport.map.hevc_nvenc:=hevc"
+  ```
+- ROS 2 Jazzy:
+  ```
+  ros2 run image_transport republish --ros-args -p in_transport:=ffmpeg -p out_transport:=raw --remap in/ffmpeg:=image_raw/ffmpeg --remap out:=image_raw/uncompressed -p "ffmpeg_image_transport.map.hevc_nvenc:=hevc"
+  ```
+
+Note: The commands below use the Humble syntax and need to be changed as shown here for Jazzy.
 
 Republishing is generally not necessary so long as publisher and subscriber both properly use
-an image transport. Some nodes however, notably the rosbag player, do not support a proper transport,
-rendering republishing necessary.
+an image transport. Some nodes however, notably the rosbag player, do not support a proper transport, rendering republishing necessary.
 
 #### Republishing raw images from rosbags in ffmpeg format
 
@@ -164,7 +167,8 @@ how to set encoding profile and preset for e.g. a usb camera.
 ### How to use a custom version of libav (aka ffmpeg)
 
 See the [``ffmpeg_encoder_decoder`` repository](https://github.com/ros-misc-utilities/ffmpeg_encoder_decoder).
-
+There you will also find instructions for hardware accelerated
+streaming on the NVidia Jetson.
 
 ## License
 
