@@ -2,6 +2,11 @@
 Changelog for package ffmpeg_image_transport
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* fix bug that prevents compilation in humble
+* Contributors: Bernd Pfrommer
+
 2.0.0 (2025-03-15)
 ------------------
 * use ffmpeg_encoder_decoder
