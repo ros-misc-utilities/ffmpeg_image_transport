@@ -2,8 +2,8 @@
 Changelog for package ffmpeg_image_transport
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+2.0.1 (2025-03-17)
+------------------
 * fix bug that prevents compilation in humble
 * Contributors: Bernd Pfrommer
 
