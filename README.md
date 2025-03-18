@@ -19,7 +19,7 @@ To extract e.g. frames or an mp4 file from a recorded bag, have a look at the
 Continuous integration is tested under Ubuntu with the following ROS2 distros:
 
  [![Build Status](https://build.ros2.org/buildStatus/icon?job=Hdev__ffmpeg_image_transport__ubuntu_jammy_amd64&subject=Humble)](https://build.ros2.org/job/Hdev__ffmpeg_image_transport__ubuntu_jammy_amd64/)
- [![Build Status](https://build.ros2.org/buildStatus/icon?job=Jdev__ffmpeg_image_transport__ubuntu_noble_amd6464&subject=Jazzy)](https://build.ros2.org/job/Jdev__ffmpeg_image_transport__ubuntu_noble_amd64/)
+ [![Build Status](https://build.ros2.org/buildStatus/icon?job=Jdev__ffmpeg_image_transport__ubuntu_noble_amd64&subject=Jazzy)](https://build.ros2.org/job/Jdev__ffmpeg_image_transport__ubuntu_noble_amd64/)
  [![Build Status](https://build.ros2.org/buildStatus/icon?job=Rdev__ffmpeg_image_transport__ubuntu_noble_amd64&subject=Rolling)](https://build.ros2.org/job/Rdev__ffmpeg_image_transport__ubuntu_noble_amd64/)
 
 
