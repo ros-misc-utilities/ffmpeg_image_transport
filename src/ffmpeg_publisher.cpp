@@ -204,8 +204,8 @@ rmw_qos_profile_t FFMPEGPublisher::initialize(
 void FFMPEGPublisher::publish(const Image & msg, const PublishFn & publish_fn) const
 {
   FFMPEGPublisher * me = const_cast<FFMPEGPublisher *>(this);
+  me->publishFunction_ = &publish_fn;
   if (!me->encoder_.isInitialized()) {
-    me->publishFunction_ = &publish_fn;
     if (!me->encoder_.initialize(
           msg.width, msg.height,
           std::bind(&FFMPEGPublisher::packetReady, me, _1, _2, _3, _4, _5, _6, _7, _8, _9))) {
