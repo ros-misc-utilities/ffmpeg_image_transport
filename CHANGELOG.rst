@@ -2,6 +2,12 @@
 Changelog for package ffmpeg_image_transport
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* fix bug: segfault when publish function pointer changes
+* updated broken badge, fixed typo in readme
+* Contributors: Bernd Pfrommer
+
 2.0.1 (2025-03-17)
 ------------------
 * fix bug that prevents compilation in humble
