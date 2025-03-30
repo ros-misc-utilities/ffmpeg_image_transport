@@ -73,7 +73,7 @@ Here is a list of the available encoding parameters:
   You can list all available encoders with ``ffmpeg --codecs``. In the h264 row, look for ``(encoders)``.
 - ``preset``: default is empty (""). Valid values can be for instance ``slow``, ``ll`` (low latency) etc.
    To find out what presets are available, run e.g.
-   ``fmpeg -hide_banner -f lavfi -i nullsrc -c:v libx264 -preset help -f mp4 - 2>&1``
+   ``ffmpeg -hide_banner -f lavfi -i nullsrc -c:v libx264 -preset help -f mp4 - 2>&1``
 - ``profile``: For instance ``baseline``, ``main``. See [the ffmpeg website](https://trac.ffmpeg.org/wiki/Encode/H.264).
 - ``tune``: See [the ffmpeg website](https://trac.ffmpeg.org/wiki/Encode/H.264). The default is empty("").
 - ``gop_size``: The number of frames between keyframes. Default: 10.
