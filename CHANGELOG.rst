@@ -2,8 +2,8 @@
 Changelog for package ffmpeg_image_transport
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+2.0.3 (2025-05-26)
+------------------
 * avoid ament_target_dependencies
 * Contributors: Bernd Pfrommer
 
