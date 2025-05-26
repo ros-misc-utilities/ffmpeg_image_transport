@@ -50,14 +50,14 @@ target_include_directories(${LIBRARY_NAME} PUBLIC
   "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
   "$<INSTALL_INTERFACE:include>")
 
-ament_target_dependencies(${LIBRARY_NAME}
+target_link_libraries(${LIBRARY_NAME}
 PUBLIC
-  image_transport
-  pluginlib
-  rclcpp
-  sensor_msgs
-  ffmpeg_encoder_decoder
-  ffmpeg_image_transport_msgs)
+  image_transport::image_transport
+  pluginlib::pluginlib
+  rclcpp::rclcpp
+  ${sensor_msgs_TARGETS}
+  ffmpeg_encoder_decoder::ffmpeg_encoder_decoder
+  ${ffmpeg_image_transport_msgs_TARGETS})
 
 ament_export_dependencies(
   image_transport
