@@ -2,6 +2,11 @@
 Changelog for package ffmpeg_image_transport
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* avoid ament_target_dependencies
+* Contributors: Bernd Pfrommer
+
 2.0.2 (2025-03-30)
 ------------------
 * fix bug: segfault when publish function pointer changes
