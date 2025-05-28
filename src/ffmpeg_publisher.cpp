@@ -165,7 +165,7 @@ void FFMPEGPublisher::packetReady(
   msg->flags = flags;
   msg->data.assign(data, data + sz);
 
-  (*publishFunction_)(*msg);
+  (*publishFunction_)->publish(*msg);
 }
 
 #if defined(IMAGE_TRANSPORT_API_V1) || defined(IMAGE_TRANSPORT_API_V2)
@@ -201,10 +201,10 @@ rmw_qos_profile_t FFMPEGPublisher::initialize(
   return (custom_qos);
 }
 
-void FFMPEGPublisher::publish(const Image & msg, const PublishFn & publish_fn) const
+void FFMPEGPublisher::publish(const Image & msg, const PublisherT & publisher) const
 {
   FFMPEGPublisher * me = const_cast<FFMPEGPublisher *>(this);
-  me->publishFunction_ = &publish_fn;
+  me->publishFunction_ = &publisher;
   if (!me->encoder_.isInitialized()) {
     if (!me->encoder_.initialize(
           msg.width, msg.height,
