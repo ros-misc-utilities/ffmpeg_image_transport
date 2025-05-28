@@ -53,7 +53,7 @@ protected:
     rclcpp::Node * node, const std::string & base_topic, rmw_qos_profile_t custom_qos,
     rclcpp::PublisherOptions opt) override;
 #endif
-  void publish(const Image & message, const PublishFn & publish_fn) const override;
+  void publish(const Image & message, const PublisherT & publisher) const override;
 
 private:
   void packetReady(
@@ -66,7 +66,7 @@ private:
     rclcpp::Node * node, const std::string & base_name, const ParameterDefinition & definition);
   // variables ---------
   rclcpp::Logger logger_;
-  const PublishFn * publishFunction_{NULL};
+  const PublisherT * publishFunction_{NULL};
   ffmpeg_encoder_decoder::Encoder encoder_;
   uint32_t frameCounter_{0};
   // ---------- configurable parameters
