@@ -28,12 +28,18 @@ using ffmpeg_image_transport_msgs::msg::FFMPEGPacket;
 using FFMPEGPublisherPlugin = image_transport::SimplePublisherPlugin<FFMPEGPacket>;
 using Image = sensor_msgs::msg::Image;
 using FFMPEGPacketConstPtr = FFMPEGPacket::ConstSharedPtr;
-
 class FFMPEGPublisher : public FFMPEGPublisherPlugin
 {
 public:
   using ParameterDescriptor = rcl_interfaces::msg::ParameterDescriptor;
   using ParameterValue = rclcpp::ParameterValue;
+
+#if defined(IMAGE_TRANSPORT_API_V1) || defined(IMAGE_TRANSPORT_API_V2)
+  using PublisherTFn = PublishFn;
+#else
+  using PublisherTFn = PublisherT;
+#endif
+
   struct ParameterDefinition
   {
     ParameterValue defaultValue;
@@ -53,7 +59,7 @@ protected:
     rclcpp::Node * node, const std::string & base_topic, rmw_qos_profile_t custom_qos,
     rclcpp::PublisherOptions opt) override;
 #endif
-  void publish(const Image & message, const PublisherT & publisher) const override;
+  void publish(const Image & message, const PublisherTFn & publisher) const override;
 
 private:
   void packetReady(
@@ -66,7 +72,7 @@ private:
     rclcpp::Node * node, const std::string & base_name, const ParameterDefinition & definition);
   // variables ---------
   rclcpp::Logger logger_;
-  const PublisherT * publishFunction_{NULL};
+  const PublisherTFn * publishFunction_{NULL};
   ffmpeg_encoder_decoder::Encoder encoder_;
   uint32_t frameCounter_{0};
   // ---------- configurable parameters
