@@ -52,7 +52,9 @@ protected:
 
 private:
   void frameReady(const ImageConstPtr & img, bool /*isKeyFrame*/) const;
-  void initialize(rclcpp::Node * node, const std::string & base_topics);
+  void initialize(rclcpp::Node * node, const std::string & base_topic);
+  void declareEncodingToDecodersMap(const std::string & encoding);
+
   // -------------- variables
   rclcpp::Logger logger_;
   rclcpp::Node * node_;

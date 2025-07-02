@@ -37,7 +37,7 @@ def generate_launch_description():
     usb_cam_dir = get_package_share_directory('usb_cam')
 
     # get path to params file
-    params_path = os.path.join(usb_cam_dir, 'config', 'params.yaml')
+    params_path = os.path.join(usb_cam_dir, 'config', 'params_1.yaml')
 
     node_name = args.node_name
 
@@ -54,9 +54,9 @@ def generate_launch_description():
                 {
                     '.image_raw.ffmpeg.encoding': 'h264_nvenc',
                     '.image_raw.ffmpeg.profile': 'main',
-                    '.image_raw.ffmpeg.preset': 'll',
-                    '.image_raw.ffmpeg.gop': 15,
-                    '.image_raw.ffmpeg.qmax': 31,
+                    # '.image_raw.ffmpeg.preset': 'll',
+                    # '.image_raw.ffmpeg.gop': 15,
+                    # '.image_raw.ffmpeg.qmax': 31,
                 },
             ],
         )

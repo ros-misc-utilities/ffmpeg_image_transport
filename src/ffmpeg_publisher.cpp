@@ -56,7 +56,7 @@ static const ParameterDefinition params[] = {
                          .set__type(rcl_interfaces::msg::ParameterType::PARAMETER_STRING)
                          .set__description("pixel format to use for encoding")
                          .set__read_only(false)},
-  {ParameterValue(static_cast<int>(10)),
+  {ParameterValue(static_cast<int>(-1)),
    ParameterDescriptor()
      .set__name("qmax")
      .set__type(rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER)
@@ -64,24 +64,34 @@ static const ParameterDefinition params[] = {
      .set__read_only(false)
      .set__integer_range(
        {rcl_interfaces::msg::IntegerRange().set__from_value(-1).set__to_value(1024).set__step(1)})},
-  {ParameterValue(static_cast<int64_t>(8242880)),
+  {ParameterValue(static_cast<int64_t>(-1)),
    ParameterDescriptor()
      .set__name("bit_rate")
      .set__type(rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER)
      .set__description("target bit rate, see ffmpeg docs")
      .set__read_only(false)
      .set__integer_range({rcl_interfaces::msg::IntegerRange()
-                            .set__from_value(1)
+                            .set__from_value(-1)
                             .set__to_value(std::numeric_limits<int>::max())
                             .set__step(1)})},
-  {ParameterValue(static_cast<int>(10)),
+  {ParameterValue(static_cast<int>(-1)),
    ParameterDescriptor()
      .set__name("gop_size")
      .set__type(rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER)
      .set__description("gop size (distance between keyframes)")
      .set__read_only(false)
      .set__integer_range({rcl_interfaces::msg::IntegerRange()
-                            .set__from_value(1)
+                            .set__from_value(-1)
+                            .set__to_value(std::numeric_limits<int>::max())
+                            .set__step(1)})},
+  {ParameterValue(static_cast<int>(0)),
+   ParameterDescriptor()
+     .set__name("max_b_frames")
+     .set__type(rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER)
+     .set__description("max number of b frames")
+     .set__read_only(false)
+     .set__integer_range({rcl_interfaces::msg::IntegerRange()
+                            .set__from_value(0)
                             .set__to_value(std::numeric_limits<int>::max())
                             .set__step(1)})},
   {ParameterValue(false), ParameterDescriptor()
@@ -137,6 +147,8 @@ void FFMPEGPublisher::declareParameter(
     encoder_.setPixelFormat(v.get<std::string>());
   } else if (n == "qmax") {
     encoder_.setQMax(v.get<int>());
+  } else if (n == "max_b_frames") {
+    encoder_.setMaxBFrames(v.get<int>());
   } else if (n == "bit_rate") {
     encoder_.setBitRate(v.get<int>());
   } else if (n == "gop_size") {
