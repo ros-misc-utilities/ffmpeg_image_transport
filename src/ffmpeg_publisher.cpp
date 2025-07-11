@@ -224,7 +224,7 @@ void FFMPEGPublisher::publish(const Image & msg, const PublisherTFn & publisher)
     if (!me->encoder_.initialize(
           msg.width, msg.height,
           std::bind(&FFMPEGPublisher::packetReady, me, _1, _2, _3, _4, _5, _6, _7, _8, _9))) {
-      RCLCPP_ERROR_STREAM(logger_, "cannot initialize encoder!");
+      RCLCPP_ERROR_STREAM(logger_, "cannot initialize encoder");
       return;
     }
   }

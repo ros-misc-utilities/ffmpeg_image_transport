@@ -57,7 +57,7 @@ void FFMPEGSubscriber::initialize(rclcpp::Node * node, const std::string & base_
   uint ns_len = node_->get_effective_namespace().length();
   std::string param_base_name = base_topic.substr(ns_len);
   std::replace(param_base_name.begin(), param_base_name.end(), '/', '.');
-  param_namespace_ = param_base_name + "." + getTransportName() + ".map.";
+  param_namespace_ = param_base_name + "." + getTransportName() + ".";
   const bool mp = ffmpeg_encoder_decoder::get_safe_param<bool>(
     node_, param_namespace_ + "measure_performance", false);
   decoder_.setMeasurePerformance(mp);
@@ -67,7 +67,7 @@ void FFMPEGSubscriber::declareEncodingToDecodersMap(const std::string & encoding
 {
   // Declare Parameters
   // create parameters from default map
-  const std::string key = param_namespace_ + encoding;
+  const std::string key = param_namespace_ + "map." + encoding;
   rclcpp::ParameterValue v;
   try {
     rcl_interfaces::msg::ParameterDescriptor pd;
@@ -75,7 +75,7 @@ void FFMPEGSubscriber::declareEncodingToDecodersMap(const std::string & encoding
       .set__type(rcl_interfaces::msg::ParameterType::PARAMETER_STRING)
       .set__description("decoders for encoding: " + encoding)
       .set__read_only(false);
-    (void)node_->declare_parameter(key, rclcpp::ParameterValue(""), pd);
+    const auto val = node_->declare_parameter(key, rclcpp::ParameterValue(""), pd);
   } catch (const rclcpp::exceptions::ParameterAlreadyDeclaredException &) {
     RCLCPP_DEBUG_STREAM(logger_, "was previously declared: " << encoding);
   }
@@ -85,8 +85,11 @@ static std::vector<std::string> splitByComma(const std::string & decoder_names)
 {
   std::stringstream ss(decoder_names);
   std::vector<std::string> decoders;
-  for (std::string s; ss.good(); decoders.push_back(s)) {
+  for (std::string s; ss.good();) {
     getline(ss, s, ',');
+    if (!s.empty()) {
+      decoders.push_back(s);
+    }
   }
   return (decoders);
 }
@@ -104,16 +107,45 @@ void FFMPEGSubscriber::internalCallback(const FFMPEGPacketConstPtr & msg, const 
     userCallback_ = &user_cb;
     declareEncodingToDecodersMap(msg->encoding);
     const std::string decoder_names = ffmpeg_encoder_decoder::get_safe_param<std::string>(
-      node_, param_namespace_ + msg->encoding, "");
+      node_, param_namespace_ + "map." + msg->encoding, "");
     const std::vector<std::string> decoders = splitByComma(decoder_names);
-    if (!decoder_.initialize(
-          msg->encoding, std::bind(&FFMPEGSubscriber::frameReady, this, _1, _2), decoders)) {
-      RCLCPP_ERROR_STREAM(logger_, "cannot initialize decoder!");
-      return;
+    if (decoders.empty()) {
+      RCLCPP_WARN_STREAM(logger_, "no decoders configured for encoding " << msg->encoding);
+      // No alternatives where found, let the decoder figure out which is best to use.
+      // Downside: will not catch problems that happen during decode, just when opening
+      // the codec.
+      if (!decoder_.initialize(
+            msg->encoding, std::bind(&FFMPEGSubscriber::frameReady, this, _1, _2), decoders)) {
+        RCLCPP_ERROR_STREAM(logger_, "cannot initialize decoder!");
+        return;
+      }
+    } else {
+      RCLCPP_INFO_STREAM(logger_, "trying configured decoders in order: " << decoder_names);
+      for (const auto & dec : decoders) {
+        try {
+          if (!decoder_.initialize(
+                msg->encoding, std::bind(&FFMPEGSubscriber::frameReady, this, _1, _2), {dec})) {
+            RCLCPP_ERROR_STREAM(logger_, "cannot initialize decoder: " << dec);
+            continue;
+          }
+        } catch (std::runtime_error & e) {
+          continue;
+        }
+        // sometimes the failure is only detected when the decode is happening
+        if (!decoder_.decodePacket(
+              msg->encoding, &msg->data[0], msg->data.size(), msg->pts, msg->header.frame_id,
+              msg->header.stamp)) {
+          RCLCPP_ERROR_STREAM(logger_, "decoder cannot decode packet: " << dec);
+          decoder_.reset();
+          continue;
+        }
+        RCLCPP_INFO_STREAM(logger_, "successfully opened decoder " << dec);
+      }
     }
+  } else {  // the decoder is already initialized
+    decoder_.decodePacket(
+      msg->encoding, &msg->data[0], msg->data.size(), msg->pts, msg->header.frame_id,
+      msg->header.stamp);
   }
-  decoder_.decodePacket(
-    msg->encoding, &msg->data[0], msg->data.size(), msg->pts, msg->header.frame_id,
-    msg->header.stamp);
 }
 }  // namespace ffmpeg_image_transport
