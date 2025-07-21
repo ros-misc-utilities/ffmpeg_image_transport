@@ -91,12 +91,14 @@ your publisher node (camera driver), you can give it a parameter list on the way
                      '.image_raw.ffmpeg.av_options': 'preset:ll,profile:main,crf:0'}]
 ```
 See the example launch file for a V4L USB camera (``usb_camera.launch.py``).
+If the above parameter settings don't work, use the ``ros2 param dump <your_node_name>``
+command to find out what the proper parameter path is.
 
 ### Subscriber (viewer)
 
 The subscriber has only one parameter (``map``), which is the map between the encoding that
-was used to encode the frames, and the libav decoder to be used for decoding. The mapping is done by creating
-entries in the ``ffmpeg.map`` parameter, which is prefixed by the image base name, e.g. ``camera``.
+was used to encode the frames, and the libav decoder to be used for decoding.
+The mapping is done by creating entries in the ``ffmpeg.map`` parameter, which is prefixed by the image base name, e.g. ``camera``.
 
 For example to tell the subscriber to use the ``hevc_cuvid`` decoder instead of the default
 decoder for decoding incoming ``hevc`` packets set a parameter like so *after* you started the viewer:
@@ -104,10 +106,10 @@ decoder for decoding incoming ``hevc`` packets set a parameter like so *after* y
 ros2 param set <name_of_your_viewer_node> camera.image_raw.ffmpeg.map.hevc hevc_cuvid
 ```
 This is assuming that your viewer node is subscribing to an image ``/camera/image_raw/ffmpeg``.
-
 You also need to refresh the subscription (drop down menu in the viewer) for the parameter to take hold.
-If anyone ever figures out how to set the parameters *when* starting the viewer (rather than afterwards!), please update this document.
-
+The ROS rqt suite of tools currently *does not take command line arguments*.
+Passing command line arguments does not work, and launch wrapper scripts also don't work.
+Use a republisher node as a work-around.
 
 ### Republishing
 
