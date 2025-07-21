@@ -140,6 +140,7 @@ void FFMPEGSubscriber::internalCallback(const FFMPEGPacketConstPtr & msg, const 
           continue;
         }
         RCLCPP_INFO_STREAM(logger_, "successfully opened decoder " << dec);
+        break;
       }
     }
   } else {  // the decoder is already initialized
