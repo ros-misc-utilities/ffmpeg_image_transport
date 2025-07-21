@@ -68,18 +68,15 @@ the one that is decoding (viewing).
 
 Here is a list of the available encoding parameters:
 
-- ``encoding``: the libav (ffmpeg) encoder being used. The default is ``libx264``, which is on-CPU unaccelerated encoding.
+- ``encoder``: the libav (ffmpeg) encoder being used. The default is ``libx264``, which is on-CPU unaccelerated encoding.
   Depending on your hardware, your encoding options may include the hardware accelerated ``h264_nvenc`` or ``h264_vaapi``.
   You can list all available encoders with ``ffmpeg --codecs``. In the h264 row, look for ``(encoders)``.
-- ``preset``: default is empty (""). Valid values can be for instance ``slow``, ``ll`` (low latency) etc.
-   To find out what presets are available, run e.g.
-   ``ffmpeg -hide_banner -f lavfi -i nullsrc -c:v libx264 -preset help -f mp4 - 2>&1``
-- ``profile``: For instance ``baseline``, ``main``. See [the ffmpeg website](https://trac.ffmpeg.org/wiki/Encode/H.264).
-- ``tune``: See [the ffmpeg website](https://trac.ffmpeg.org/wiki/Encode/H.264). The default is empty("").
+- ``av_options``: default is empty (""). Comma-separeted list of valid
+   libav options in the form of (key:value),  e.g.:``'preset:ll,profile:main,crf:0'``. See ffmpeg documentation
+   for [more](https://trac.ffmpeg.org/wiki/Encode/H.264).
 - ``gop_size``: The number of frames between keyframes. Default: 10.
    The larger this number the more latency you will have, but also the more efficient the compression becomes.
 - ``bit_rate``: The max bit rate [in bits/s] that the encoding will target. Default is ``8242880``.
-- ``crf``: Constant Rate Factor, affects the image quality. Value range is ``[0, 51]``; ``0`` is lossless, ``23`` is default, ``51`` is worst quality.
 - ``delay``: Not sure what it does, but doesn't help with delay. Default is empty ("").
 - ``pixel_format``: Forces a different pixel format for internal conversions. Experimental, don't use.
 - ``qmax``: Max quantization rate. Defaults to 10. See [ffmpeg documentation](https://www.ffmpeg.org/ffmpeg-codecs.html).
@@ -90,22 +87,21 @@ Here is a list of the available encoding parameters:
 The parameters are under the ``ffmpeg`` variable block. If you launch
 your publisher node (camera driver), you can give it a parameter list on the way like so:
 ```
-        parameters=[{'ffmpeg_image_transport.encoding': 'hevc_nvenc',
-                     'ffmpeg_image_transport.profile': 'main',
-                     'ffmpeg_image_transport.preset': 'll',
-                     'ffmpeg_image_transport.gop_size': 15}]
+        parameters=[{'.image_raw.ffmpeg.encoder': 'hevc_nvenc',
+                     '.image_raw.ffmpeg.av_options': 'preset:ll,profile:main,crf:0'}]
 ```
-See the example launch file for a V4L USB camera
+See the example launch file for a V4L USB camera (``usb_camera.launch.py``).
 
 ### Subscriber (viewer)
 
 The subscriber has only one parameter (``map``), which is the map between the encoding that
-was used to encode the frames, and the libav decoder to be used for decoding. The mapping is done by creating entries in the ``ffmpeg.map`` parameter, which is prefixed by the image base name, e.g. ``camera``.
+was used to encode the frames, and the libav decoder to be used for decoding. The mapping is done by creating
+entries in the ``ffmpeg.map`` parameter, which is prefixed by the image base name, e.g. ``camera``.
 
-For example to tell the subscriber to use the ``hevc`` decoder instead of the default ``hevc_cuvid``
-decoder for decoding incoming ``hevc_nvenc`` packets set a parameter like so *after* you started the viewer:
+For example to tell the subscriber to use the ``hevc_cuvid`` decoder instead of the default
+decoder for decoding incoming ``hevc`` packets set a parameter like so *after* you started the viewer:
 ```
-ros2 param set <name_of_your_viewer_node> camera.image_raw.ffmpeg.map.hevc_nvenc hevc
+ros2 param set <name_of_your_viewer_node> camera.image_raw.ffmpeg.map.hevc hevc_cuvid
 ```
 This is assuming that your viewer node is subscribing to an image ``/camera/image_raw/ffmpeg``.
 
@@ -135,7 +131,10 @@ For example to decode incoming ``hevc_nvenc`` packets with the ``hevc`` decoder:
 Note: The commands below use the Humble syntax and need to be changed as shown here for Jazzy.
 
 Republishing is generally not necessary so long as publisher and subscriber both properly use
-an image transport. Some nodes however, notably the rosbag player, do not support a proper transport, rendering republishing necessary.
+an image transport. Some nodes however, notably the rosbag player, do not support a proper transport, making republishing necessary.
+
+Please use the republishing launch file (``republish.launch.py``) in
+this repo as a starting point for how to set the decoding map.
 
 #### Republishing raw images from rosbags in ffmpeg format
 

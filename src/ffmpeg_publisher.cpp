@@ -31,26 +31,12 @@ static const ParameterDefinition params[] = {
      .set__type(rcl_interfaces::msg::ParameterType::PARAMETER_STRING)
      .set__description("ffmpeg encoder to use, see ffmpeg supported encoders")
      .set__read_only(false)},
-  {ParameterValue(""), ParameterDescriptor()
-                         .set__name("preset")
-                         .set__type(rcl_interfaces::msg::ParameterType::PARAMETER_STRING)
-                         .set__description("ffmpeg encoder preset")
-                         .set__read_only(false)},
-  {ParameterValue(""), ParameterDescriptor()
-                         .set__name("tune")
-                         .set__type(rcl_interfaces::msg::ParameterType::PARAMETER_STRING)
-                         .set__description("ffmpeg encoder tune")
-                         .set__read_only(false)},
-  {ParameterValue(""), ParameterDescriptor()
-                         .set__name("delay")
-                         .set__type(rcl_interfaces::msg::ParameterType::PARAMETER_STRING)
-                         .set__description("ffmpeg encoder delay")
-                         .set__read_only(false)},
-  {ParameterValue(""), ParameterDescriptor()
-                         .set__name("crf")
-                         .set__type(rcl_interfaces::msg::ParameterType::PARAMETER_STRING)
-                         .set__description("constant rate factor")
-                         .set__read_only(false)},
+  {ParameterValue(""),
+   ParameterDescriptor()
+     .set__name("av_options")
+     .set__type(rcl_interfaces::msg::ParameterType::PARAMETER_STRING)
+     .set__description("comma-separated list of AV options: profile:main,preset:ll")
+     .set__read_only(false)},
   {ParameterValue(""), ParameterDescriptor()
                          .set__name("pixel_format")
                          .set__type(rcl_interfaces::msg::ParameterType::PARAMETER_STRING)
@@ -135,14 +121,8 @@ void FFMPEGPublisher::declareParameter(
   if (n == "encoder") {
     encoder_.setEncoder(v.get<std::string>());
     RCLCPP_INFO_STREAM(logger_, "using libav encoder: " << v.get<std::string>());
-  } else if (n == "preset") {
-    encoder_.addAVOption("preset", v.get<std::string>());
-  } else if (n == "tune") {
-    encoder_.addAVOption("tune", v.get<std::string>());
-  } else if (n == "delay") {
-    encoder_.addAVOption("delay", v.get<std::string>());
-  } else if (n == "crf") {
-    encoder_.addAVOption("crf", v.get<std::string>());
+  } else if (n == "av_options") {
+    handleAVOptions(v.get<std::string>());
   } else if (n == "pixel_format") {
     encoder_.setAVSourcePixelFormat(v.get<std::string>());
   } else if (n == "qmax") {
@@ -160,6 +140,33 @@ void FFMPEGPublisher::declareParameter(
     performanceInterval_ = v.get<int>();
   } else {
     RCLCPP_ERROR_STREAM(logger_, "unknown parameter: " << n);
+  }
+}
+
+static std::vector<std::string> splitByChar(const std::string & str_list, const char sep)
+{
+  std::stringstream ss(str_list);
+  std::vector<std::string> split;
+  for (std::string s; ss.good();) {
+    getline(ss, s, sep);
+    if (!s.empty()) {
+      split.push_back(s);
+    }
+  }
+  return (split);
+}
+
+void FFMPEGPublisher::handleAVOptions(const std::string & opt)
+{
+  const auto split = splitByChar(opt, ',');
+  for (const auto & sl : split) {
+    const auto kv = splitByChar(sl, ':');
+    if (kv.size() != 2) {
+      RCLCPP_WARN_STREAM(logger_, "skipping bad AV option: " << sl);
+    } else {
+      encoder_.addAVOption(kv[0], kv[1]);
+      RCLCPP_INFO_STREAM(logger_, "setting AV option " << kv[0] << " to " << kv[1]);
+    }
   }
 }
 
