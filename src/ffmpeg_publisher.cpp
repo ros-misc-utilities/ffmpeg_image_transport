@@ -27,9 +27,9 @@ using ParameterDescriptor = FFMPEGPublisher::ParameterDescriptor;
 static const ParameterDefinition params[] = {
   {ParameterValue("libx264"),
    ParameterDescriptor()
-     .set__name("encoding")
+     .set__name("encoder")
      .set__type(rcl_interfaces::msg::ParameterType::PARAMETER_STRING)
-     .set__description("ffmpeg encoder to use, see ffmpeg h264 supported encoders")
+     .set__description("ffmpeg encoder to use, see ffmpeg supported encoders")
      .set__read_only(false)},
   {ParameterValue(""), ParameterDescriptor()
                          .set__name("preset")
@@ -132,7 +132,7 @@ void FFMPEGPublisher::declareParameter(
     v = node->get_parameter(param_name).get_parameter_value();
   }
   const auto & n = definition.descriptor.name;
-  if (n == "encoding" || n == "encoder") {
+  if (n == "encoder") {
     encoder_.setEncoder(v.get<std::string>());
     RCLCPP_INFO_STREAM(logger_, "using libav encoder: " << v.get<std::string>());
   } else if (n == "preset") {
