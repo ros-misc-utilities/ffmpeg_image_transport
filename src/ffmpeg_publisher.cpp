@@ -13,16 +13,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <ffmpeg_encoder_decoder/safe_param.hpp>
+#include <ffmpeg_encoder_decoder/utils.hpp>
 #include <ffmpeg_image_transport/ffmpeg_publisher.hpp>
 
 using namespace std::placeholders;
 
 namespace ffmpeg_image_transport
 {
-using ParameterDefinition = FFMPEGPublisher::ParameterDefinition;
-using ParameterValue = FFMPEGPublisher::ParameterValue;
-using ParameterDescriptor = FFMPEGPublisher::ParameterDescriptor;
+using ParameterValue = ParameterDefinition::ParameterValue;
+using ParameterDescriptor = ParameterDefinition::ParameterDescriptor;
 
 static const ParameterDefinition params[] = {
   {ParameterValue("libx264"),
@@ -101,22 +100,21 @@ FFMPEGPublisher::FFMPEGPublisher() : logger_(rclcpp::get_logger("FFMPEGPublisher
 
 FFMPEGPublisher::~FFMPEGPublisher() {}
 
+void FFMPEGPublisher::shutdown()
+{
+  if (encoder_.isInitialized()) {
+    RCLCPP_INFO_STREAM(logger_, "flushing encoder.");
+    encoder_.flush();
+  }
+}
+
 // This code was lifted from compressed_image_transport
 
 void FFMPEGPublisher::declareParameter(
   rclcpp::Node * node, const std::string & base_name, const ParameterDefinition & definition)
 {
   // transport scoped parameter (e.g. image_raw.compressed.format)
-  const std::string transport_name = getTransportName();
-  const std::string param_name =
-    base_name + "." + transport_name + "." + definition.descriptor.name;
-  rclcpp::ParameterValue v;
-  try {
-    v = node->declare_parameter(param_name, definition.defaultValue, definition.descriptor);
-  } catch (const rclcpp::exceptions::ParameterAlreadyDeclaredException &) {
-    RCLCPP_DEBUG(logger_, "%s was previously declared", definition.descriptor.name.c_str());
-    v = node->get_parameter(param_name).get_parameter_value();
-  }
+  const auto v = definition.declare(node, base_name, getTransportName());
   const auto & n = definition.descriptor.name;
   if (n == "encoder") {
     encoder_.setEncoder(v.get<std::string>());
@@ -143,24 +141,11 @@ void FFMPEGPublisher::declareParameter(
   }
 }
 
-static std::vector<std::string> splitByChar(const std::string & str_list, const char sep)
-{
-  std::stringstream ss(str_list);
-  std::vector<std::string> split;
-  for (std::string s; ss.good();) {
-    getline(ss, s, sep);
-    if (!s.empty()) {
-      split.push_back(s);
-    }
-  }
-  return (split);
-}
-
 void FFMPEGPublisher::handleAVOptions(const std::string & opt)
 {
-  const auto split = splitByChar(opt, ',');
+  const auto split = ffmpeg_encoder_decoder::utils::split_by_char(opt, ',');
   for (const auto & sl : split) {
-    const auto kv = splitByChar(sl, ':');
+    const auto kv = ffmpeg_encoder_decoder::utils::split_by_char(sl, ':');
     if (kv.size() != 2) {
       RCLCPP_WARN_STREAM(logger_, "skipping bad AV option: " << sl);
     } else {

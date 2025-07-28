@@ -17,6 +17,7 @@
 #define FFMPEG_IMAGE_TRANSPORT__FFMPEG_PUBLISHER_HPP_
 
 #include <ffmpeg_encoder_decoder/encoder.hpp>
+#include <ffmpeg_image_transport/parameter_definition.hpp>
 #include <ffmpeg_image_transport_msgs/msg/ffmpeg_packet.hpp>
 #include <image_transport/simple_publisher_plugin.hpp>
 #include <memory>
@@ -31,20 +32,11 @@ using FFMPEGPacketConstPtr = FFMPEGPacket::ConstSharedPtr;
 class FFMPEGPublisher : public FFMPEGPublisherPlugin
 {
 public:
-  using ParameterDescriptor = rcl_interfaces::msg::ParameterDescriptor;
-  using ParameterValue = rclcpp::ParameterValue;
-
 #if defined(IMAGE_TRANSPORT_API_V1) || defined(IMAGE_TRANSPORT_API_V2)
   using PublisherTFn = PublishFn;
 #else
   using PublisherTFn = PublisherT;
 #endif
-
-  struct ParameterDefinition
-  {
-    ParameterValue defaultValue;
-    ParameterDescriptor descriptor;
-  };
 
   FFMPEGPublisher();
   ~FFMPEGPublisher() override;
@@ -60,6 +52,7 @@ protected:
     rclcpp::PublisherOptions opt) override;
 #endif
   void publish(const Image & message, const PublisherTFn & publisher) const override;
+  void shutdown() override;
 
 private:
   void packetReady(

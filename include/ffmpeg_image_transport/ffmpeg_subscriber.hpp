@@ -17,6 +17,7 @@
 #define FFMPEG_IMAGE_TRANSPORT__FFMPEG_SUBSCRIBER_HPP_
 
 #include <ffmpeg_encoder_decoder/decoder.hpp>
+#include <ffmpeg_image_transport/parameter_definition.hpp>
 #include <ffmpeg_image_transport_msgs/msg/ffmpeg_packet.hpp>
 #include <image_transport/simple_subscriber_plugin.hpp>
 #include <string>
@@ -49,18 +50,21 @@ protected:
     rclcpp::Node * node, const std::string & base_topic, const Callback & callback,
     rmw_qos_profile_t custom_qos, rclcpp::SubscriptionOptions) override;
 #endif
+  void shutdown() override;
 
 private:
   void frameReady(const ImageConstPtr & img, bool /*isKeyFrame*/) const;
   void initialize(rclcpp::Node * node, const std::string & base_topic);
   void declareEncodingToDecodersMap(const std::string & encoding);
-
+  void declareParameter(
+    rclcpp::Node * node, const std::string & base_name, const ParameterDefinition & definition);
+  void handleAVOptions(const std::string & opt);
   // -------------- variables
   rclcpp::Logger logger_;
-  rclcpp::Node * node_;
+  rclcpp::Node * node_{nullptr};
   ffmpeg_encoder_decoder::Decoder decoder_;
   std::string decoderType_;
-  const Callback * userCallback_;
+  const Callback * userCallback_{nullptr};
   std::string param_namespace_;
 };
 }  // namespace ffmpeg_image_transport

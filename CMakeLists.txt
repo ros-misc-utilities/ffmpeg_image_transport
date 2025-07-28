@@ -44,6 +44,7 @@ add_library(
   SHARED
   src/ffmpeg_publisher.cpp
   src/ffmpeg_subscriber.cpp
+  src/parameter_definition.cpp
   src/manifest.cpp)
 
 target_include_directories(${LIBRARY_NAME} PUBLIC
@@ -116,6 +117,16 @@ if(BUILD_TESTING)
   endif()
   ament_clang_format(CONFIG_FILE .clang-format)
   ament_xmllint()
+
+  find_package(ament_cmake_gtest REQUIRED)
+  ament_add_gtest(${PROJECT_NAME}_test test/test_1.cpp
+    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/test)
+  target_include_directories(${PROJECT_NAME}_test PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>)
+  target_link_libraries(${PROJECT_NAME}_test
+    ${sensor_msgs_TARGETS} rclcpp::rclcpp image_transport::image_transport)
+
 endif()
 
 ament_package()
