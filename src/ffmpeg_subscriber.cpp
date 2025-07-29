@@ -64,7 +64,12 @@ void FFMPEGSubscriber::subscribeImpl(
 #else
 void FFMPEGSubscriber::subscribeImpl(
   rclcpp::Node * node, const std::string & base_topic, const Callback & callback,
-  rmw_qos_profile_t custom_qos, rclcpp::SubscriptionOptions opt)
+#ifdef IMAGE_TRANSPORT_USE_QOS
+  rclcpp::QoS custom_qos,
+#else
+  rmw_qos_profile_t custom_qos,
+#endif
+  rclcpp::SubscriptionOptions opt)
 {
   initialize(node, base_topic);
 #ifdef IMAGE_TRANSPORT_API_V2

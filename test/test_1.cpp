@@ -99,6 +99,15 @@ private:
   const std::string parameter_base_{"camera.image.ffmpeg."};
 };
 
+#ifdef IMAGE_TRANSPORT_USE_QOS
+static rclcpp::QoS convert_profile(const rmw_qos_profile_t & p)
+{
+  return (rclcpp::QoS(rclcpp::QoSInitialization::from_rmw(p), p));
+}
+#else
+static const rmw_qos_profile_t & convert_profile(const rmw_qos_profile_t & p) { return (p); }
+#endif
+
 class TestSubscriber : public rclcpp::Node
 {
 public:
@@ -114,7 +123,7 @@ public:
     image_transport::TransportHints hints(this);
     sub_ = std::make_shared<image_transport::Subscriber>(image_transport::create_subscription(
       this, "camera/image", std::bind(&TestSubscriber::imageCallback, this, std::placeholders::_1),
-      "ffmpeg", rmw_qos_profile_default));
+      "ffmpeg", convert_profile(rmw_qos_profile_default)));
   }
   void shutDown()
   {

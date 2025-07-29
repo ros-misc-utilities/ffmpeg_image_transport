@@ -48,7 +48,12 @@ protected:
 #else
   void subscribeImpl(
     rclcpp::Node * node, const std::string & base_topic, const Callback & callback,
-    rmw_qos_profile_t custom_qos, rclcpp::SubscriptionOptions) override;
+#ifdef IMAGE_TRANSPORT_USE_QOS
+    rclcpp::QoS custom_qos,
+#else
+    rmw_qos_profile_t custom_qos,
+#endif
+    rclcpp::SubscriptionOptions) override;
 #endif
   void shutdown() override;
 
