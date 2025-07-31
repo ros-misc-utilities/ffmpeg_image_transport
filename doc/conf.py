@@ -16,29 +16,29 @@
 import os
 import sys
 
-sys.path.insert(0, os.path.abspath('.'))
+sys.path.insert(0, os.path.abspath("."))
 
-project = 'ffmpeg_image_transport'
+project = "ffmpeg_image_transport"
 # copyright = '2024, Bernd Pfrommer'
-author = 'Bernd Pfrommer'
+author = "Bernd Pfrommer"
 
 
 # Add any Sphinx extension module names here, as strings.
 extensions = [
-    'myst_parser',
-    'sphinx.ext.autodoc',
-    'sphinx.ext.doctest',
-    'sphinx_rtd_theme',
-    'sphinx.ext.coverage',
-    'sphinx.ext.intersphinx',
-    'sphinx.ext.autosummary',
-    'sphinx.ext.napoleon',
+    "myst_parser",
+    "sphinx.ext.autodoc",
+    "sphinx.ext.doctest",
+    "sphinx_rtd_theme",
+    "sphinx.ext.coverage",
+    "sphinx.ext.intersphinx",
+    "sphinx.ext.autosummary",
+    "sphinx.ext.napoleon",
 ]
 
 # Add any paths that contain templates here, relative to this directory.
-templates_path = ['_templates']
+templates_path = ["_templates"]
 
-source_suffix = '.rst'
+source_suffix = ".rst"
 # exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 exclude_patterns = []
 
@@ -51,19 +51,19 @@ pygments_style = None
 # a list of builtin themes.
 #
 # html_theme = 'alabaster'
-html_theme = 'sphinx_rtd_theme'
-htmlhelp_basename = 'ffmpeg_image_transport_doc'
+html_theme = "sphinx_rtd_theme"
+htmlhelp_basename = "ffmpeg_image_transport_doc"
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ['_static']
+html_static_path = ["_static"]
 
 # -- Extension configuration -------------------------------------------------
 
-autoclass_content = 'both'
+autoclass_content = "both"
 
 autodoc_default_options = {
-    'members': True,  # document members
-    'undoc-members': True,  # also document members without documentation
+    "members": True,  # document members
+    "undoc-members": True,  # also document members without documentation
 }

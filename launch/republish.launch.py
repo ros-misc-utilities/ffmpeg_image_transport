@@ -24,25 +24,24 @@ from launch_ros.descriptions import ComposableNode
 
 def launch_setup(context, *args, **kwargs):
     container = ComposableNodeContainer(
-        name='republisher_container',
-        namespace='',
-        package='rclcpp_components',
-        executable='component_container',
+        name="republisher_container",
+        namespace="",
+        package="rclcpp_components",
+        executable="component_container",
         composable_node_descriptions=[
             ComposableNode(
-                package='image_transport',
-                plugin='image_transport::Republisher',
-                namespace='/camera',
-                name='republisher',
+                package="image_transport",
+                plugin="image_transport::Republisher",
+                namespace="/camera",
+                name="republisher",
                 parameters=[
                     {
-                        'in_transport': 'ffmpeg',
-                        'out_transport': 'raw',
-                        '.image_raw.ffmpeg.map.hevc': 'hevc_cuvid,hevc_qsv,hevc_v4l2m2m,hevc',
-                        '.image_raw.ffmpeg.map.h264': 'h264_cuvid,h264_qsv,h264_v4l2m2m,h264',
-                        '.image_raw.ffmpeg.map.hevc': 'hevc_cuvid,hevc_qsv,hevc_v4l2m2m,hevc',
-                        '.image_raw.ffmpeg.map.av1': 'av1_cuvid,av1,av1_qs,libaom-av1,libdav1d',
-                        '.image_raw.ffmpeg.measure_performance': False,
+                        "in_transport": "ffmpeg",
+                        "out_transport": "raw",
+                        ".image_raw.ffmpeg.map.h264": "h264,h264_cuvid,h264_qsv,h264_v4l2m2m",
+                        ".image_raw.ffmpeg.map.hevc": "hevc_cuvid,hevc_qsv,hevc_v4l2m2m,hevc",
+                        ".image_raw.ffmpeg.map.av1": "libaom-av1,av1_cuvid,av1,av1_qs,libdav1d",
+                        ".image_raw.ffmpeg.measure_performance": False,
                     }
                 ],
                 # remap the 'in' topic to the topic under which the
@@ -50,13 +49,13 @@ def launch_setup(context, *args, **kwargs):
                 # node will automatically append the in_transport
                 # (here 'ffmpeg') to the topic.
                 remappings=[
-                    ('in', '/camera/image_raw'),
-                    ('out', '/camera/image_raw/decoded'),
+                    ("in", "/camera/image_raw"),
+                    ("out", "/camera/image_raw/decoded"),
                 ],
-                extra_arguments=[{'use_intra_process_comms': True}],
+                extra_arguments=[{"use_intra_process_comms": True}],
             )
         ],
-        output='screen',
+        output="screen",
     )
     return [container]
 
