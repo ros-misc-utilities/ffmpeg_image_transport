@@ -48,7 +48,7 @@ void FFMPEGSubscriber::shutdown()
 {
   if (decoder_.isInitialized()) {
     RCLCPP_INFO_STREAM(logger_, "flushing decoder.");
-    decoder_.flush();
+    decoder_.flush();  // may cause additional frameReady() calls!
     decoder_.reset();
   }
   SimpleSubscriberPlugin::shutdown();

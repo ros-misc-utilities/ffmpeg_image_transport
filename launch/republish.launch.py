@@ -20,6 +20,8 @@ import launch
 from launch.actions import OpaqueFunction
 from launch_ros.actions import ComposableNodeContainer
 from launch_ros.descriptions import ComposableNode
+from launch.actions import DeclareLaunchArgument as LaunchArg
+from launch.substitutions import LaunchConfiguration as LaunchConfig
 
 
 def launch_setup(context, *args, **kwargs):
@@ -32,12 +34,12 @@ def launch_setup(context, *args, **kwargs):
             ComposableNode(
                 package="image_transport",
                 plugin="image_transport::Republisher",
-                namespace="/camera",
+                namespace=LaunchConfig("camera"),
                 name="republisher",
                 parameters=[
                     {
-                        "in_transport": "ffmpeg",
-                        "out_transport": "raw",
+                        "in_transport": LaunchConfig("in_transport"),
+                        "out_transport": LaunchConfig("out_transport"),
                         ".image_raw.ffmpeg.map.h264": "h264,h264_cuvid,h264_qsv,h264_v4l2m2m",
                         ".image_raw.ffmpeg.map.hevc": "hevc_cuvid,hevc_qsv,hevc_v4l2m2m,hevc",
                         ".image_raw.ffmpeg.map.av1": "libaom-av1,av1_cuvid,av1,av1_qs,libdav1d",
@@ -49,8 +51,8 @@ def launch_setup(context, *args, **kwargs):
                 # node will automatically append the in_transport
                 # (here 'ffmpeg') to the topic.
                 remappings=[
-                    ("in", "/camera/image_raw"),
-                    ("out", "/camera/image_raw/decoded"),
+                    ("in", LaunchConfig("image_topic")),
+                    ("out", LaunchConfig("image_topic").perform(context) + "/decoded"),
                 ],
                 extra_arguments=[{"use_intra_process_comms": True}],
             )
@@ -63,6 +65,27 @@ def launch_setup(context, *args, **kwargs):
 def generate_launch_description():
     return launch.LaunchDescription(
         [
+            LaunchArg(
+                "image_topic",
+                default_value=["image_raw"],
+                description="name of topic to republish "
+                "(without the /camera/  prefix and the /ffmpeg suffix)",
+            ),
+            LaunchArg(
+                "camera",
+                default_value=["/camera"],
+                description="name of camera (base of topics)",
+            ),
+            LaunchArg(
+                "in_transport",
+                default_value=["ffmpeg"],
+                description="name of the input transport, e.g. ffmpeg, raw, compressed",
+            ),
+            LaunchArg(
+                "out_transport",
+                default_value=["raw"],
+                description="name of the output transport, e.g. ffmpeg, raw, compressed",
+            ),
             OpaqueFunction(function=launch_setup),
         ]
     )
