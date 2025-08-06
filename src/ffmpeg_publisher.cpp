@@ -184,7 +184,7 @@ void FFMPEGPublisher::advertiseImpl(
 }
 #else
 void FFMPEGPublisher::advertiseImpl(
-  rclcpp::Node * node, const std::string & base_topic, rmw_qos_profile_t custom_qos,
+  rclcpp::Node * node, const std::string & base_topic, QoSType custom_qos,
   rclcpp::PublisherOptions opt)
 {
   auto qos = initialize(node, base_topic, custom_qos);
@@ -192,8 +192,8 @@ void FFMPEGPublisher::advertiseImpl(
 }
 #endif
 
-rmw_qos_profile_t FFMPEGPublisher::initialize(
-  rclcpp::Node * node, const std::string & base_topic, rmw_qos_profile_t custom_qos)
+FFMPEGPublisher::QoSType FFMPEGPublisher::initialize(
+  rclcpp::Node * node, const std::string & base_topic, QoSType custom_qos)
 {
   // namespace handling code lifted from compressed_image_transport
   const uint ns_len = node->get_effective_namespace().length();
@@ -204,7 +204,12 @@ rmw_qos_profile_t FFMPEGPublisher::initialize(
     declareParameter(node, param_base_name, p);
   }
   // bump queue size to 2 * distance between keyframes
+#ifdef IMAGE_TRANSPORT_USE_QOS
+  custom_qos.keep_last(
+    std::max(static_cast<int>(custom_qos.get_rmw_qos_profile().depth), 2 * encoder_.getGOPSize()));
+#else
   custom_qos.depth = std::max(static_cast<int>(custom_qos.depth), 2 * encoder_.getGOPSize());
+#endif
   return (custom_qos);
 }
 

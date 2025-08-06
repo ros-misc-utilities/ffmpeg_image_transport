@@ -37,7 +37,11 @@ public:
 #else
   using PublisherTFn = PublisherT;
 #endif
-
+#ifdef IMAGE_TRANSPORT_USE_QOS
+  using QoSType = rclcpp::QoS;
+#else
+  using QoSType = rmw_qos_profile_t;
+#endif
   FFMPEGPublisher();
   ~FFMPEGPublisher() override;
   std::string getTransportName() const override { return "ffmpeg"; }
@@ -48,7 +52,7 @@ protected:
     rclcpp::Node * node, const std::string & base_topic, rmw_qos_profile_t custom_qos) override;
 #else
   void advertiseImpl(
-    rclcpp::Node * node, const std::string & base_topic, rmw_qos_profile_t custom_qos,
+    rclcpp::Node * node, const std::string & base_topic, QoSType custom_qos,
     rclcpp::PublisherOptions opt) override;
 #endif
   void publish(const Image & message, const PublisherTFn & publisher) const override;
@@ -58,8 +62,8 @@ private:
   void packetReady(
     const std::string & frame_id, const rclcpp::Time & stamp, const std::string & codec,
     uint32_t width, uint32_t height, uint64_t pts, uint8_t flags, uint8_t * data, size_t sz);
-  rmw_qos_profile_t initialize(
-    rclcpp::Node * node, const std::string & base_name, rmw_qos_profile_t custom_qos);
+
+  QoSType initialize(rclcpp::Node * node, const std::string & base_name, QoSType custom_qos);
   void declareParameter(
     rclcpp::Node * node, const std::string & base_name, const ParameterDefinition & definition);
   void handleAVOptions(const std::string & opt);
