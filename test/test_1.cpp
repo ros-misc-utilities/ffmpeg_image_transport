@@ -181,7 +181,7 @@ TEST(ffmpeg_image_transport, test_1)
   rclcpp::NodeOptions sub_options;
   auto sub_node = std::make_shared<TestSubscriber>(sub_options);
   // must use hevc, for some reason hevc_cuvid will not deliver the last frame
-  sub_node->setParameter<std::string>("map.hevc/bgr8", "hevc");
+  sub_node->setParameter<std::string>("map.hevc.gray.bgr8.mono8", "hevc,hevc_cuvid");
   sub_node->initialize();  // only after params have been set!
   exec.add_node(sub_node);
   while (pub_node->publish_next() && rclcpp::ok()) {
