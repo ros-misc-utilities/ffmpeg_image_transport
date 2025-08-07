@@ -49,7 +49,7 @@ public:
 protected:
 #if defined(IMAGE_TRANSPORT_API_V1) || defined(IMAGE_TRANSPORT_API_V2)
   void advertiseImpl(
-    rclcpp::Node * node, const std::string & base_topic, rmw_qos_profile_t custom_qos) override;
+    rclcpp::Node * node, const std::string & base_topic, QoSType custom_qos) override;
 #else
   void advertiseImpl(
     rclcpp::Node * node, const std::string & base_topic, QoSType custom_qos,
@@ -64,14 +64,14 @@ private:
     uint32_t width, uint32_t height, uint64_t pts, uint8_t flags, uint8_t * data, size_t sz);
 
   QoSType initialize(rclcpp::Node * node, const std::string & base_name, QoSType custom_qos);
-  void declareParameter(
-    rclcpp::Node * node, const std::string & base_name, const ParameterDefinition & definition);
+  void declareParameter(rclcpp::Node * node, const ParameterDefinition & definition);
   void handleAVOptions(const std::string & opt);
   // variables ---------
   rclcpp::Logger logger_;
   const PublisherTFn * publishFunction_{NULL};
   ffmpeg_encoder_decoder::Encoder encoder_;
   uint32_t frameCounter_{0};
+  std::string paramNamespace_;
   // ---------- configurable parameters
   int performanceInterval_{175};  // num frames between perf printouts
   bool measurePerformance_{false};

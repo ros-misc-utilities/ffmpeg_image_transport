@@ -18,10 +18,10 @@
 namespace ffmpeg_image_transport
 {
 rclcpp::ParameterValue ParameterDefinition::declare(
-  rclcpp::Node * node, const std::string & baseName, const std::string & transportName) const
+  rclcpp::Node * node, const std::string & paramBase) const
 {
   // transport scoped parameter (e.g. image_raw.compressed.format)
-  const std::string paramName = baseName + "." + transportName + "." + descriptor.name;
+  const std::string paramName = paramBase + descriptor.name;
   rclcpp::ParameterValue v;
   try {
     v = node->declare_parameter(paramName, defaultValue, descriptor);

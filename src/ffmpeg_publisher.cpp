@@ -32,7 +32,7 @@ static const ParameterDefinition params[] = {
      .set__read_only(false)},
   {ParameterValue(""),
    ParameterDescriptor()
-     .set__name("av_options")
+     .set__name("encoder_av_options")
      .set__type(rcl_interfaces::msg::ParameterType::PARAMETER_STRING)
      .set__description("comma-separated list of AV options: profile:main,preset:ll")
      .set__read_only(false)},
@@ -80,20 +80,10 @@ static const ParameterDefinition params[] = {
                             .set__to_value(std::numeric_limits<int>::max())
                             .set__step(1)})},
   {ParameterValue(false), ParameterDescriptor()
-                            .set__name("measure_performance")
+                            .set__name("encoder_measure_performance")
                             .set__type(rcl_interfaces::msg::ParameterType::PARAMETER_BOOL)
                             .set__description("enable performance timing")
                             .set__read_only(false)},
-  {ParameterValue(static_cast<int>(175)),
-   ParameterDescriptor()
-     .set__name("performance_interval")
-     .set__type(rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER)
-     .set__description("after how many frames to print perf info")
-     .set__read_only(false)
-     .set__integer_range({rcl_interfaces::msg::IntegerRange()
-                            .set__from_value(1)
-                            .set__to_value(std::numeric_limits<int>::max())
-                            .set__step(1)})},
 };
 
 FFMPEGPublisher::FFMPEGPublisher() : logger_(rclcpp::get_logger("FFMPEGPublisher")) {}
@@ -110,16 +100,15 @@ void FFMPEGPublisher::shutdown()
 
 // This code was lifted from compressed_image_transport
 
-void FFMPEGPublisher::declareParameter(
-  rclcpp::Node * node, const std::string & base_name, const ParameterDefinition & definition)
+void FFMPEGPublisher::declareParameter(rclcpp::Node * node, const ParameterDefinition & definition)
 {
   // transport scoped parameter (e.g. image_raw.compressed.format)
-  const auto v = definition.declare(node, base_name, getTransportName());
+  const auto v = definition.declare(node, paramNamespace_);
   const auto & n = definition.descriptor.name;
   if (n == "encoder") {
     encoder_.setEncoder(v.get<std::string>());
     RCLCPP_INFO_STREAM(logger_, "using libav encoder: " << v.get<std::string>());
-  } else if (n == "av_options") {
+  } else if (n == "encoder_av_options") {
     handleAVOptions(v.get<std::string>());
   } else if (n == "pixel_format") {
     encoder_.setAVSourcePixelFormat(v.get<std::string>());
@@ -131,11 +120,9 @@ void FFMPEGPublisher::declareParameter(
     encoder_.setBitRate(v.get<int>());
   } else if (n == "gop_size") {
     encoder_.setGOPSize(v.get<int>());
-  } else if (n == "measure_performance") {
+  } else if (n == "encoder_measure_performance") {
     measurePerformance_ = v.get<bool>();
     encoder_.setMeasurePerformance(v.get<bool>());
-  } else if (n == "performance_interval") {
-    performanceInterval_ = v.get<int>();
   } else {
     RCLCPP_ERROR_STREAM(logger_, "unknown parameter: " << n);
   }
@@ -196,12 +183,16 @@ FFMPEGPublisher::QoSType FFMPEGPublisher::initialize(
   rclcpp::Node * node, const std::string & base_topic, QoSType custom_qos)
 {
   // namespace handling code lifted from compressed_image_transport
-  const uint ns_len = node->get_effective_namespace().length();
-  std::string param_base_name = base_topic.substr(ns_len);
+  uint ns_len = node->get_effective_namespace().length();
+  // if a namespace is given (ns_len > 1), then strip one more
+  // character to avoid a leading "/" that will then become a "."
+  uint ns_prefix_len = ns_len > 1 ? ns_len + 1 : ns_len;
+  std::string param_base_name = base_topic.substr(ns_prefix_len);
   std::replace(param_base_name.begin(), param_base_name.end(), '/', '.');
+  paramNamespace_ = param_base_name + "." + getTransportName() + ".";
 
   for (const auto & p : params) {
-    declareParameter(node, param_base_name, p);
+    declareParameter(node, p);
   }
   // bump queue size to 2 * distance between keyframes
 #ifdef IMAGE_TRANSPORT_USE_QOS

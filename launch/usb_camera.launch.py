@@ -36,22 +36,22 @@ def launch_setup(context, *args, **kwargs):
     node_name = "usb_cam"
     params = {
         "av1": {
-            ".image_raw.ffmpeg.qmax": 1,  # high quality
+            "image_raw.ffmpeg.qmax": 1,  # high quality
             # '.image_raw.ffmpeg.bit_rate': 1000000,
-            ".image_raw.ffmpeg.gop": 1,
-            ".image_raw.ffmpeg.encoder": "librav1e",  # very high CPU usage!!!
+            "image_raw.ffmpeg.gop_size": 1,
+            "image_raw.ffmpeg.encoder": "librav1e",  # very high CPU usage!!!
         },
         "hevc": {
-            ".image_raw.ffmpeg.qmax": 1,  # high quality
+            "image_raw.ffmpeg.qmax": 1,  # high quality
             # '.image_raw.ffmpeg.bit_rate': 1000000,
-            ".image_raw.ffmpeg.gop": 1,
-            ".image_raw.ffmpeg.encoder": "hevc_vaapi",
+            "image_raw.ffmpeg.gop_size": 1,
+            "image_raw.ffmpeg.encoder": "hevc_vaapi",
         },
         "h264": {
-            ".image_raw.ffmpeg.qmax": 1,  # high quality
-            ".image_raw.ffmpeg.bit_rate": 1000000,  # required!
-            ".image_raw.ffmpeg.gop": 1,
-            ".image_raw.ffmpeg.encoder": "libx264",
+            "image_raw.ffmpeg.qmax": 1,  # high quality
+            "image_raw.ffmpeg.bit_rate": 1000000,  # required!
+            "image_raw.ffmpeg.gop_size": 1,
+            "image_raw.ffmpeg.encoder": "libx264",
         },
     }
     node = Node(

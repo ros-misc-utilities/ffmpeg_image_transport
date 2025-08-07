@@ -25,8 +25,7 @@ struct ParameterDefinition
   using ParameterDescriptor = rcl_interfaces::msg::ParameterDescriptor;
   using ParameterValue = rclcpp::ParameterValue;
 
-  rclcpp::ParameterValue declare(
-    rclcpp::Node * node, const std::string & baseName, const std::string & transportName) const;
+  rclcpp::ParameterValue declare(rclcpp::Node * node, const std::string & paramBase) const;
   // ---- variables
   ParameterValue defaultValue;
   ParameterDescriptor descriptor;

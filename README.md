@@ -75,7 +75,7 @@ Here is a list of the available encoding parameters:
 - ``encoder``: the libav (ffmpeg) encoder being used. The default is ``libx264``, which is on-CPU unaccelerated encoding.
   Depending on your hardware, your encoding options may include the hardware accelerated ``h264_nvenc`` or ``h264_vaapi``.
   You can list all available encoders with ``ffmpeg --codecs``. In the h264 row, look for ``(encoders)``.
-- ``av_options``: default is empty (""). Comma-separeted list of valid
+- ``encoder_av_options``: default is empty (""). Comma-separeted list of valid
    libav options in the form of (key:value),  e.g.:``'preset:ll,profile:main,crf:0'``.
    See the ffmpeg documentation for [more](https://trac.ffmpeg.org/wiki/Encode/H.264).
 - ``gop_size``: The number of frames between keyframes. Default: 10.
@@ -87,14 +87,13 @@ Here is a list of the available encoding parameters:
 - ``qmax``: Max quantization rate. Defaults to 10.
   See [ffmpeg documentation](https://www.ffmpeg.org/ffmpeg-codecs.html).
   The larger this number, the worse the image looks, and the more efficient the encoding.
-- ``measure_performance``: For performance debugging (developers only). Defaults to false.
-- ``performance_interval``: How many frames to wait between logging performance data. Ignore.
+- ``encoder_measure_performance``: For performance debugging (developers only). Defaults to false.
 
 The parameters are under the ``ffmpeg`` variable block. If you launch
 your publisher node (camera driver), you can give it a parameter list on the way like so:
 ```
-        parameters=[{'.image_raw.ffmpeg.encoder': 'hevc_nvenc',
-                     '.image_raw.ffmpeg.av_options': 'preset:ll,profile:main,crf:0'}]
+        parameters=[{'image_raw.ffmpeg.encoder': 'hevc_nvenc',
+                     'image_raw.ffmpeg.encoder_av_options': 'preset:ll,profile:main,crf:0'}]
 ```
 See the example launch file for a V4L USB camera (``usb_camera.launch.py``).
 If the above parameter settings don't work, use the ``ros2 param dump <your_node_name>``
@@ -102,19 +101,25 @@ command to find out what the proper parameter path is.
 
 ### Subscriber (viewer)
 
-The subscriber has only one parameter (``map.<some_encoding>``), which is the map between a codec and a comma-separated list of libav decoders that can be used for decoding.
-If you don't set the map parameter, the Subscriber plugin will try to decode with a default set of libav decoders that support the appropriate codec.
-The map is exposed as the ROS``ffmpeg.map`` parameter, which is prefixed by the image base name, e.g. ``camera.image_raw``.
-The easiest way to find the exact naming of the parameter is to run the node and to use ``ros2 param list`` to find the ``ffmpeg.map`` parameter.
+- ``decoder_av_options`` comma-separated list of libav options to pass
+   to the decoder, like ``foo:bar,foobar:baz``. Default: empty string.
+- ``decoder_measure_performance`` enables performance
+   measurements. Default: false.
+- ``decoders.<codec>.<av_source_pixel_format>.<cv_bridge_target_format>.<original_ros_encoding>`` specifies the decoders to use for a given FFMPEGPacket encoding.
+  If no decoders are specified for the full encoding, a less specific parameter will be tested, i.e. ``decoders.<codec>.<av_source_pixel_format>.<cv_bridge_target_format>``, then ``decoders.<codec>.<av_source_pixel_format>``, and finally ``decoders.<codec>``.
+  If all parameters are found to be empty, the Subscriber plugin will try to decode with a default set of libav decoders that support the appropriate codec.
+
+All parameters are prefixed again by the image topic and the transport, just like for the publisher node.
+The easiest way to find the exact naming of the parameter is to run the node and to use ``ros2 param list`` to find the ``ffmpeg.decoders`` parameter.
 Please also refer to the republisher launch script example.
 
 Typically ROS2 parameters are passed to a node by *initializing* the parameters before launching the node, and the node then reads the parameter when it *declares* the parameter.
 Unfortunately, this route is not available for the popular ``rqt`` based suite of image viewing tools such as ``rqt_image_view``, since ``rqt`` does not read command line arguments and therefore no parameters can be initialized. The only workaround there is to:
 1) start e.g. ``rqt_image_view``
-2) select the ffmpeg image transport in the drop down box. This will *declare* the ``map`` parameter so you can set it in the next step.
+2) select the ffmpeg image transport in the drop down box. This will *declare* the ``decoders`` parameter so you can set it in the next step.
 3) find the node name with ``ros2 node list`` and set the parameter using something like
-``ros2 param set <name_of_your_viewer_node> camera.image_raw.ffmpeg.map.hevc hevc_cuvid``. This assumes your viewer node is subscribing to the topic ``/camera/image_raw/ffmpeg``.
-4) again using the drop down box, switch to another image transport and back to ffmpeg. This will cause the ffmpeg transport plugin to apply the updated ``map`` parameter.
+``ros2 param set <name_of_your_viewer_node> camera.image_raw.ffmpeg.decoders.hevc hevc_cuvid``. This assumes your viewer node is subscribing to the topic ``/camera/image_raw/ffmpeg``.
+4) again using the drop down box, switch to another image transport and back to ffmpeg. This will cause the ffmpeg transport plugin to apply the updated ``decoders`` parameter.
 
 ### Republishing
 
@@ -127,11 +132,11 @@ For example to first try to decode incoming ``hevc`` packets with the ``hevc_cuv
 
 - ROS 2 Humble:
   ```
-  ros2 run image_transport republish ffmpeg in/ffmpeg:=image_raw/ffmpeg raw out:=image_raw/uncompressed --ros-args -p "ffmpeg_image_transport.map.hevc:=hevc_cuvid,hevc"
+  ros2 run image_transport republish ffmpeg in/ffmpeg:=image_raw/ffmpeg raw out:=image_raw/uncompressed --ros-args -p "ffmpeg_image_transport.decoders.hevc:=hevc_cuvid,hevc"
   ```
 - ROS 2 Jazzy:
   ```
-  ros2 run image_transport republish --ros-args -p in_transport:=ffmpeg -p out_transport:=raw --remap in/ffmpeg:=image_raw/ffmpeg --remap out:=image_raw/uncompressed -p "ffmpeg_image_transport.map.hevc:=hevc_cuvid,hevc"
+  ros2 run image_transport republish --ros-args -p in_transport:=ffmpeg -p out_transport:=raw --remap in/ffmpeg:=image_raw/ffmpeg --remap out:=image_raw/uncompressed -p "ffmpeg_image_transport.decoders.hevc:=hevc_cuvid,hevc"
   ```
 
 Note: The commands below use the Humble syntax and need to be changed as shown here for Jazzy.
@@ -139,7 +144,7 @@ Note: The commands below use the Humble syntax and need to be changed as shown h
 Republishing is generally not necessary so long as publisher and subscriber both properly use
 an image transport.
 Some nodes however, notably the rosbag player, do not support a proper transport, making republishing necessary.
-Please use the republishing launch file (``republish.launch.py``) in this repo as a starting point for how to set the decoding map.
+Please use the republishing launch file (``republish.launch.py``) in this repo as a starting point for how to set the decoders parameter.
 
 #### Republishing raw images from rosbags in ffmpeg format
 

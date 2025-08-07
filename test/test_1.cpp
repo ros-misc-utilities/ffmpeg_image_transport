@@ -40,9 +40,13 @@ static void setNodeParameter(
 class TestPublisher : public rclcpp::Node
 {
 public:
-  explicit TestPublisher(const rclcpp::NodeOptions & opt) : Node("test_publisher", opt) {}
+  explicit TestPublisher(const std::string & ns, const rclcpp::NodeOptions & opt)
+  : Node("test_publisher", ns, opt)
+  {
+  }
   virtual ~TestPublisher() {}
   void setNumberOfImages(size_t n) { num_images_ = n; }
+  void setParameterBase(const std::string & base) { parameter_base_ = base; }
   template <class T>
   void setParameter(const std::string & name, const T & v)
   {
@@ -96,7 +100,7 @@ private:
   size_t num_images_{10};
   std::shared_ptr<ImageTransport> image_transport_;
   std::shared_ptr<image_transport::Publisher> pub_;
-  const std::string parameter_base_{"camera.image.ffmpeg."};
+  std::string parameter_base_;
 };
 
 #ifdef IMAGE_TRANSPORT_USE_QOS
@@ -111,8 +115,12 @@ static const rmw_qos_profile_t & convert_profile(const rmw_qos_profile_t & p) { 
 class TestSubscriber : public rclcpp::Node
 {
 public:
-  explicit TestSubscriber(const rclcpp::NodeOptions & opt) : Node("test_subscriber", opt) {}
+  explicit TestSubscriber(const std::string & ns, const rclcpp::NodeOptions & opt)
+  : Node("test_subscriber", ns, opt)
+  {
+  }
   const auto & getImageCounter() const { return (image_counter_); }
+  void setParameterBase(const std::string & base) { parameter_base_ = base; }
   template <class T>
   void setParameter(const std::string & name, const T & v)
   {
@@ -158,30 +166,33 @@ private:
   }
   std::shared_ptr<ImageTransport> image_transport_;
   std::shared_ptr<image_transport::Subscriber> sub_;
-  const std::string parameter_base_{"camera.image.ffmpeg."};
+  std::string parameter_base_;
   size_t image_counter_{0};
 };
 
-TEST(ffmpeg_image_transport, test_1)
+void lossless_compression_test(
+  const std::string & ns, const std::string & encoder, const std::string & av_options,
+  const std::string & decoders)
 {
-  rclcpp::init(0, nullptr);
   const size_t num_images = 10;
+  const std::string parameter_base = "camera.image.ffmpeg.";
   rclcpp::executors::SingleThreadedExecutor exec;
-
   rclcpp::NodeOptions pub_options;
-  auto pub_node = std::make_shared<TestPublisher>(pub_options);
+  auto pub_node = std::make_shared<TestPublisher>(ns, pub_options);
   // pub_node->setBitRate(1000000);
-  pub_node->setParameter<std::string>("encoder", "libx265");
-  pub_node->setParameter<std::string>("av_options", "x265-params:lossless=1,tune:zerolatency");
+  pub_node->setParameterBase(parameter_base);
+  pub_node->setParameter<std::string>("encoder", encoder);
+  pub_node->setParameter<std::string>("encoder_av_options", av_options);
   pub_node->setParameter<int>("gop_size", 1);                   // to force immediate publish
   pub_node->setParameter<std::string>("pixel_format", "gray");  // needed for lossless!
   pub_node->setNumberOfImages(num_images);
   pub_node->initialize();  // only after params have been set!
   exec.add_node(pub_node);
   rclcpp::NodeOptions sub_options;
-  auto sub_node = std::make_shared<TestSubscriber>(sub_options);
+  auto sub_node = std::make_shared<TestSubscriber>(ns, sub_options);
   // must use hevc, for some reason hevc_cuvid will not deliver the last frame
-  sub_node->setParameter<std::string>("map.hevc.gray.bgr8.mono8", "hevc,hevc_cuvid");
+  sub_node->setParameterBase(parameter_base);
+  sub_node->setParameter<std::string>("decoders.hevc.gray.bgr8.mono8", decoders);
   sub_node->initialize();  // only after params have been set!
   exec.add_node(sub_node);
   while (pub_node->publish_next() && rclcpp::ok()) {
@@ -193,6 +204,19 @@ TEST(ffmpeg_image_transport, test_1)
   pub_node->shutDown();
   sub_node->shutDown();
   EXPECT_EQ(sub_node->getImageCounter(), num_images);
+}
+
+TEST(ffmpeg_image_transport, test_with_namespace)
+{
+  rclcpp::init(0, nullptr);
+  lossless_compression_test(
+    "my_ns", "libx265", "x265-params:lossless=1,tune:zerolatency", "hevc,hevc_cuvid");
+}
+
+TEST(ffmpeg_image_transport, test_without_namespace)
+{
+  lossless_compression_test(
+    "/", "libx265", "x265-params:lossless=1,tune:zerolatency", "hevc,hevc_cuvid");
 }
 
 int main(int argc, char ** argv)

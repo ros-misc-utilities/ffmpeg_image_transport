@@ -30,12 +30,12 @@ using ffmpeg_encoder_decoder::utils::split_by_char;
 
 static const ParameterDefinition params[] = {
   {PValue(""), PDescriptor()
-                 .set__name("av_options")
+                 .set__name("decoder_av_options")
                  .set__type(rcl_interfaces::msg::ParameterType::PARAMETER_STRING)
                  .set__description("comma-separated list of AV options: delay:0")
                  .set__read_only(false)},
   {PValue(false), PDescriptor()
-                    .set__name("measure_performance")
+                    .set__name("decoder_measure_performance")
                     .set__type(rcl_interfaces::msg::ParameterType::PARAMETER_BOOL)
                     .set__description("enable performance timing")
                     .set__read_only(false)}};
@@ -67,12 +67,7 @@ void FFMPEGSubscriber::subscribeImpl(
 #else
 void FFMPEGSubscriber::subscribeImpl(
   rclcpp::Node * node, const std::string & base_topic, const Callback & callback,
-#ifdef IMAGE_TRANSPORT_USE_QOS
-  rclcpp::QoS custom_qos,
-#else
-  rmw_qos_profile_t custom_qos,
-#endif
-  rclcpp::SubscriptionOptions opt)
+  QoSType custom_qos, rclcpp::SubscriptionOptions opt)
 {
   initialize(node, base_topic);
 #ifdef IMAGE_TRANSPORT_API_V2
@@ -83,28 +78,35 @@ void FFMPEGSubscriber::subscribeImpl(
 #endif
 }
 #endif
-void FFMPEGSubscriber::initialize(rclcpp::Node * node, const std::string & base_topic)
+void FFMPEGSubscriber::initialize(rclcpp::Node * node, const std::string & base_topic_o)
 {
   node_ = node;
+#ifdef IMAGE_TRANSPORT_RESOLVES_BASE_TOPIC
+  const std::string base_topic = base_topic_o;
+#else
+  const std::string base_topic =
+    node_->get_node_topics_interface()->resolve_topic_name(base_topic_o);
+#endif
   uint ns_len = node_->get_effective_namespace().length();
-  std::string param_base_name = base_topic.substr(ns_len);
+  // if a namespace is given (ns_len > 1), then strip one more
+  // character to avoid a leading "/" that will then become a "."
+  uint ns_prefix_len = ns_len > 1 ? ns_len + 1 : ns_len;
+  std::string param_base_name = base_topic.substr(ns_prefix_len);
   std::replace(param_base_name.begin(), param_base_name.end(), '/', '.');
-  param_namespace_ = param_base_name + "." + getTransportName() + ".";
+  paramNamespace_ = param_base_name + "." + getTransportName() + ".";
 
   for (const auto & p : params) {
-    declareParameter(node, param_base_name, p);
+    declareParameter(node, p);
   }
 }
 
-void FFMPEGSubscriber::declareParameter(
-  rclcpp::Node * node, const std::string & base_name, const ParameterDefinition & definition)
+void FFMPEGSubscriber::declareParameter(rclcpp::Node * node, const ParameterDefinition & definition)
 {
-  // transport scoped parameter (e.g. image_raw.compressed.format)
-  const auto v = definition.declare(node, base_name, getTransportName());
+  const auto v = definition.declare(node, paramNamespace_);
   const auto & n = definition.descriptor.name;
-  if (n == "av_options") {
+  if (n == "decoder_av_options") {
     handleAVOptions(v.get<std::string>());
-  } else if (n == "measure_performance") {
+  } else if (n == "decoder_measure_performance") {
     decoder_.setMeasurePerformance(v.get<bool>());
   } else {
     RCLCPP_ERROR_STREAM(logger_, "unknown parameter: " << n);
@@ -115,23 +117,20 @@ std::string FFMPEGSubscriber::getDecodersFromMap(const std::string & encoding)
 {
   const auto x = split_by_char(encoding, ';');
   std::string decoders;
+  // successively create parameters that are more and more generic,
+  // i.e. hevc.yuv
   for (int i = static_cast<int>(x.size()); i > 0; --i) {
     std::string p_name;
     for (int j = 0; j < i; j++) {
       p_name += "." + x[j];
     }
-    const std::string key = param_namespace_ + "map" + p_name;
-    rcl_interfaces::msg::ParameterDescriptor pd;
-    pd.set__name(p_name)
-      .set__type(rcl_interfaces::msg::ParameterType::PARAMETER_STRING)
-      .set__description("decoders for encoding: " + p_name)
-      .set__read_only(false);
-    try {
-      decoders = node_->declare_parameter(key, rclcpp::ParameterValue(""), pd).get<std::string>();
-    } catch (const rclcpp::exceptions::ParameterAlreadyDeclaredException &) {
-      RCLCPP_DEBUG_STREAM(logger_, "was previously declared: " << p_name);
-      decoders = node_->get_parameter_or<std::string>(key, "");
-    }
+    ParameterDefinition pdef{
+      PValue(""), PDescriptor()
+                    .set__name("decoders" + p_name)
+                    .set__type(rcl_interfaces::msg::ParameterType::PARAMETER_STRING)
+                    .set__description("decoders for encoding: " + p_name)
+                    .set__read_only(false)};
+    decoders = pdef.declare(node_, paramNamespace_).get<std::string>();
     if (!decoders.empty()) {
       break;
     }

@@ -40,10 +40,10 @@ def launch_setup(context, *args, **kwargs):
                     {
                         "in_transport": LaunchConfig("in_transport"),
                         "out_transport": LaunchConfig("out_transport"),
-                        ".image_raw.ffmpeg.map.h264": "h264,h264_cuvid,h264_qsv,h264_v4l2m2m",
-                        ".image_raw.ffmpeg.map.hevc": "hevc_cuvid,hevc_qsv,hevc_v4l2m2m,hevc",
-                        ".image_raw.ffmpeg.map.av1": "libaom-av1,av1_cuvid,av1,av1_qs,libdav1d",
-                        ".image_raw.ffmpeg.measure_performance": False,
+                        "image_raw.ffmpeg.decoders.h264": "h264,h264_cuvid,h264_qsv,h264_v4l2m2m",
+                        "image_raw.ffmpeg.decoders.hevc": "hevc_cuvid,hevc_qsv,hevc_v4l2m2m,hevc",
+                        "image_raw.ffmpeg.decoders.av1": "libaom-av1,av1_cuvid,av1,av1_qs,libdav1d",
+                        "image_raw.ffmpeg.decoder_measure_performance": False,
                     }
                 ],
                 # remap the 'in' topic to the topic under which the
