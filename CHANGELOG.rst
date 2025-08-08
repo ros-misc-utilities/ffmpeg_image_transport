@@ -2,8 +2,8 @@
 Changelog for package ffmpeg_image_transport
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+3.0.0 (2025-08-08)
+------------------
 * support falling back to alternative decoders, rename parameters, add tests etc
   * adopt the new ffmpeg_encoder_api which allows for probing of decoders. The decoder parameter can now contain a list of comma-separated decoders which will be tried in order.
   * adds gtests to the repo
