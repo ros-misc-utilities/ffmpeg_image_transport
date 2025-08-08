@@ -2,6 +2,27 @@
 Changelog for package ffmpeg_image_transport
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* support falling back to alternative decoders, rename parameters, add tests etc
+  * adopt the new ffmpeg_encoder_api which allows for probing of decoders. The decoder parameter can now contain a list of comma-separated decoders which will be tried in order.
+  * adds gtests to the repo
+  * reformat to the black python formatter
+  * add arguments to some example launch files
+  * allow arbitrary AVOptions setting via av_option
+  * remove parameters "preset", "tune", "delay", and "crf" (must now be set via "av_options")
+  * remove some default values (like bit_rate) to force user to set them explicitly
+  * change the parameter names: remove the leading ".", so now the parameters are named specify "camera.image_raw.." as opposed to ".camera.image_raw..."
+  * adapt to new ffmpeg_encoder_decoder API
+  * change name of parameter from encoding->encoder
+  * provide encoding when initializing encoder (new encoder/decoder API)
+  * handle new API for image transport 6.3.0
+  * deal with Humble bug: topic is passed in without being prefixed by the namespace, but then namespace is removed!
+  * package splitting functions into utilities file
+* stop building on foxy but still support humble
+* Replaced deprecated code
+* Contributors: Alejandro Hernandez Cordero, Bernd Pfrommer
+
 2.0.3 (2025-05-26)
 ------------------
 * avoid ament_target_dependencies
