@@ -17,6 +17,7 @@
 #define FFMPEG_IMAGE_TRANSPORT__FFMPEG_SUBSCRIBER_HPP_
 
 #include <ffmpeg_encoder_decoder/decoder.hpp>
+#include <ffmpeg_image_transport/parameter_definition.hpp>
 #include <ffmpeg_image_transport_msgs/msg/ffmpeg_packet.hpp>
 #include <image_transport/simple_subscriber_plugin.hpp>
 #include <string>
@@ -28,12 +29,17 @@ using ImageConstPtr = Image::ConstSharedPtr;
 using ffmpeg_image_transport_msgs::msg::FFMPEGPacket;
 using FFMPEGPacketConstPtr = FFMPEGPacket::ConstSharedPtr;
 using FFMPEGSubscriberPlugin = image_transport::SimpleSubscriberPlugin<FFMPEGPacket>;
+#ifdef IMAGE_TRANSPORT_USE_QOS
+using QoSType = rclcpp::QoS;
+#else
+using QoSType = rmw_qos_profile_t;
+#endif
 
 class FFMPEGSubscriber : public FFMPEGSubscriberPlugin
 {
 public:
   FFMPEGSubscriber();
-  ~FFMPEGSubscriber();
+  ~FFMPEGSubscriber() override;
 
   std::string getTransportName() const override { return "ffmpeg"; }
 
@@ -43,23 +49,27 @@ protected:
 #ifdef IMAGE_TRANSPORT_API_V1
   void subscribeImpl(
     rclcpp::Node * node, const std::string & base_topic, const Callback & callback,
-    rmw_qos_profile_t custom_qos) override;
+    QoSType custom_qos) override;
 #else
   void subscribeImpl(
     rclcpp::Node * node, const std::string & base_topic, const Callback & callback,
-    rmw_qos_profile_t custom_qos, rclcpp::SubscriptionOptions) override;
+    QoSType custom_qos, rclcpp::SubscriptionOptions) override;
 #endif
+  void shutdown() override;
 
 private:
   void frameReady(const ImageConstPtr & img, bool /*isKeyFrame*/) const;
-  void initialize(rclcpp::Node * node, const std::string & base_topics);
+  void initialize(rclcpp::Node * node, const std::string & base_topic);
+  std::string getDecodersFromMap(const std::string & encoding);
+  void declareParameter(rclcpp::Node * node, const ParameterDefinition & definition);
+  void handleAVOptions(const std::string & opt);
   // -------------- variables
   rclcpp::Logger logger_;
-  rclcpp::Node * node_;
+  rclcpp::Node * node_{nullptr};
   ffmpeg_encoder_decoder::Decoder decoder_;
   std::string decoderType_;
-  const Callback * userCallback_;
-  std::string param_namespace_;
+  const Callback * userCallback_{nullptr};
+  std::string paramNamespace_;
 };
 }  // namespace ffmpeg_image_transport
 #endif  // FFMPEG_IMAGE_TRANSPORT__FFMPEG_SUBSCRIBER_HPP_
