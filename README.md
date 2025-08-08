@@ -168,7 +168,7 @@ This will republish the topic with full image transport support.
 
 ### Setting encoding parameters when launching camera driver
 
-The ``launch`` directory contains an example launch file ``usb_cambera.launch.py`` that demonstrates
+The ``launch`` directory contains an example launch file ``usb_camera.launch.py`` that demonstrates
 how to set encoding profile and preset for a usb camera.
 
 

@@ -17,6 +17,7 @@
 #include <ffmpeg_encoder_decoder/utils.hpp>
 #include <ffmpeg_image_transport/ffmpeg_publisher.hpp>
 #include <ffmpeg_image_transport/ffmpeg_subscriber.hpp>
+#include <ffmpeg_image_transport/utils.hpp>
 #include <functional>
 #include <unordered_map>
 
@@ -26,7 +27,6 @@ namespace ffmpeg_image_transport
 {
 using PValue = ParameterDefinition::ParameterValue;
 using PDescriptor = ParameterDefinition::ParameterDescriptor;
-using ffmpeg_encoder_decoder::utils::split_by_char;
 
 static const ParameterDefinition params[] = {
   {PValue(""), PDescriptor()
@@ -115,7 +115,7 @@ void FFMPEGSubscriber::declareParameter(rclcpp::Node * node, const ParameterDefi
 
 std::string FFMPEGSubscriber::getDecodersFromMap(const std::string & encoding)
 {
-  const auto x = split_by_char(encoding, ';');
+  const auto x = ffmpeg_encoder_decoder::utils::split_encoding(encoding);
   std::string decoders;
   // successively create parameters that are more and more generic,
   // i.e. hevc.yuv
@@ -140,9 +140,9 @@ std::string FFMPEGSubscriber::getDecodersFromMap(const std::string & encoding)
 
 void FFMPEGSubscriber::handleAVOptions(const std::string & opt)
 {
-  const auto split = split_by_char(opt, ',');
+  const auto split = utils::splitAVOptions(opt);
   for (const auto & sl : split) {
-    const auto kv = split_by_char(sl, ':');
+    const auto kv = utils::splitAVOption(sl);
     if (kv.size() != 2) {
       RCLCPP_WARN_STREAM(logger_, "skipping bad AV option: " << sl);
     } else {
@@ -170,7 +170,7 @@ void FFMPEGSubscriber::internalCallback(const FFMPEGPacketConstPtr & msg, const 
     return;
   }
   userCallback_ = &user_cb;
-  const auto codec = split_by_char(msg->encoding, ';')[0];
+  const auto codec = ffmpeg_encoder_decoder::utils::split_encoding(msg->encoding)[0];
   std::string decoder_names = getDecodersFromMap(msg->encoding);
   decoder_names = ffmpeg_encoder_decoder::utils::filter_decoders(codec, decoder_names);
   if (decoder_names.empty()) {
@@ -186,7 +186,7 @@ void FFMPEGSubscriber::internalCallback(const FFMPEGPacketConstPtr & msg, const 
   }
   RCLCPP_INFO_STREAM(logger_, "trying decoders in order: " << decoder_names);
 
-  for (const auto & dec : split_by_char(decoder_names, ',')) {
+  for (const auto & dec : ffmpeg_encoder_decoder::utils::split_decoders(decoder_names)) {
     try {
       if (!decoder_.initialize(
             msg->encoding, std::bind(&FFMPEGSubscriber::frameReady, this, _1, _2), dec)) {

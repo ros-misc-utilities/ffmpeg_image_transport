@@ -15,6 +15,7 @@
 
 #include <ffmpeg_encoder_decoder/utils.hpp>
 #include <ffmpeg_image_transport/ffmpeg_publisher.hpp>
+#include <ffmpeg_image_transport/utils.hpp>
 
 using namespace std::placeholders;
 
@@ -130,9 +131,9 @@ void FFMPEGPublisher::declareParameter(rclcpp::Node * node, const ParameterDefin
 
 void FFMPEGPublisher::handleAVOptions(const std::string & opt)
 {
-  const auto split = ffmpeg_encoder_decoder::utils::split_by_char(opt, ',');
+  const auto split = utils::splitAVOptions(opt);
   for (const auto & sl : split) {
-    const auto kv = ffmpeg_encoder_decoder::utils::split_by_char(sl, ':');
+    const auto kv = utils::splitAVOption(sl);
     if (kv.size() != 2) {
       RCLCPP_WARN_STREAM(logger_, "skipping bad AV option: " << sl);
     } else {

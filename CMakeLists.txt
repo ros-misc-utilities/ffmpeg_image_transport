@@ -52,6 +52,7 @@ add_library(
   src/ffmpeg_publisher.cpp
   src/ffmpeg_subscriber.cpp
   src/parameter_definition.cpp
+  src/utils.cpp
   src/manifest.cpp)
 
 target_include_directories(${LIBRARY_NAME} PUBLIC
