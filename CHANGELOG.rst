@@ -2,6 +2,11 @@
 Changelog for package ffmpeg_image_transport
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* improved CI workflow
+* Contributors: Bernd Pfrommer
+
 3.0.0 (2025-08-08)
 ------------------
 * support falling back to alternative decoders, rename parameters, add tests etc
