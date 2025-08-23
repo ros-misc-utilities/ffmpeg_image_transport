@@ -192,7 +192,7 @@ void lossless_compression_test(
   auto sub_node = std::make_shared<TestSubscriber>(ns, sub_options);
   // must use hevc, for some reason hevc_cuvid will not deliver the last frame
   sub_node->setParameterBase(parameter_base);
-  sub_node->setParameter<std::string>("decoders.hevc.gray.bgr8.mono8", decoders);
+  sub_node->setParameter<std::string>("decoders.hevc_gray_bgr8_mono8", decoders);
   sub_node->initialize();  // only after params have been set!
   exec.add_node(sub_node);
   while (pub_node->publish_next() && rclcpp::ok()) {
