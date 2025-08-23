@@ -122,7 +122,7 @@ std::string FFMPEGSubscriber::getDecodersFromMap(const std::string & encoding)
   for (int i = static_cast<int>(x.size()); i > 0; --i) {
     std::string p_name;
     for (int j = 0; j < i; j++) {
-      p_name += "." + x[j];
+      p_name += (j == 0 ? "." : "_") + x[j];
     }
     ParameterDefinition pdef{
       PValue(""), PDescriptor()
