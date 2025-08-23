@@ -2,8 +2,8 @@
 Changelog for package ffmpeg_image_transport
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+3.0.2 (2025-08-23)
+------------------
 * fix param dump bug by changing decoder param sep from . to  \_
 * Contributors: Bernd Pfrommer
 
