@@ -105,8 +105,8 @@ command to find out what the proper parameter path is.
    to the decoder, like ``foo:bar,foobar:baz``. Default: empty string.
 - ``decoder_measure_performance`` enables performance
    measurements. Default: false.
-- ``decoders.<codec>.<av_source_pixel_format>.<cv_bridge_target_format>.<original_ros_encoding>`` specifies the decoders to use for a given FFMPEGPacket encoding.
-  If no decoders are specified for the full encoding, a less specific parameter will be tested, i.e. ``decoders.<codec>.<av_source_pixel_format>.<cv_bridge_target_format>``, then ``decoders.<codec>.<av_source_pixel_format>``, and finally ``decoders.<codec>``.
+- ``decoders.<codec>_<av_source_pixel_format>_<cv_bridge_target_format>_<original_ros_encoding>`` specifies the decoders to use for a given FFMPEGPacket encoding.
+  If no decoders are specified for the full encoding, a less specific parameter will be tested, i.e. ``decoders.<codec>_<av_source_pixel_format>_<cv_bridge_target_format>``, then ``decoders.<codec>_<av_source_pixel_format>``, and finally ``decoders.<codec>``.
   If all parameters are found to be empty, the Subscriber plugin will try to decode with a default set of libav decoders that support the appropriate codec.
 
 All parameters are prefixed again by the image topic and the transport, just like for the publisher node.
