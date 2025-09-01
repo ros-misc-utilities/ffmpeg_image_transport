@@ -40,7 +40,12 @@ static const ParameterDefinition params[] = {
                     .set__description("enable performance timing")
                     .set__read_only(false)}};
 
-FFMPEGSubscriber::FFMPEGSubscriber() : logger_(rclcpp::get_logger("FFMPEGSubscriber")) {}
+FFMPEGSubscriber::FFMPEGSubscriber() : logger_(rclcpp::get_logger("FFMPEGSubscriber"))
+{
+#ifndef IMAGE_TRANSPORT_USE_NODEINTERFACE
+  node_ = nullptr;
+#endif
+}
 
 FFMPEGSubscriber::~FFMPEGSubscriber() { decoder_.reset(); }
 
@@ -56,29 +61,20 @@ void FFMPEGSubscriber::shutdown()
 
 void FFMPEGSubscriber::frameReady(const ImageConstPtr & img, bool) const { (*userCallback_)(img); }
 
-#ifdef IMAGE_TRANSPORT_API_V1
 void FFMPEGSubscriber::subscribeImpl(
-  rclcpp::Node * node, const std::string & base_topic, const Callback & callback,
-  rmw_qos_profile_t custom_qos)
+  NodeType node, const std::string & base_topic, const Callback & callback, QoSType custom_qos,
+  rclcpp::SubscriptionOptions opt)
 {
   initialize(node, base_topic);
-  FFMPEGSubscriberPlugin::subscribeImpl(node, base_topic, callback, custom_qos);
-}
+#ifdef IMAGE_TRANSPORT_NEEDS_PUBLISHEROPTIONS
+  FFMPEGSubscriberPlugin::subscribeImpl(node, base_topic, callback, custom_qos, opt);
 #else
-void FFMPEGSubscriber::subscribeImpl(
-  rclcpp::Node * node, const std::string & base_topic, const Callback & callback,
-  QoSType custom_qos, rclcpp::SubscriptionOptions opt)
-{
-  initialize(node, base_topic);
-#ifdef IMAGE_TRANSPORT_API_V2
   (void)opt;  // to suppress compiler warning
   FFMPEGSubscriberPlugin::subscribeImpl(node, base_topic, callback, custom_qos);
-#else
-  FFMPEGSubscriberPlugin::subscribeImpl(node, base_topic, callback, custom_qos, opt);
 #endif
 }
-#endif
-void FFMPEGSubscriber::initialize(rclcpp::Node * node, const std::string & base_topic_o)
+
+void FFMPEGSubscriber::initialize(NodeType node, const std::string & base_topic_o)
 {
   node_ = node;
 #ifdef IMAGE_TRANSPORT_RESOLVES_BASE_TOPIC
@@ -87,10 +83,15 @@ void FFMPEGSubscriber::initialize(rclcpp::Node * node, const std::string & base_
   const std::string base_topic =
     node_->get_node_topics_interface()->resolve_topic_name(base_topic_o);
 #endif
-  uint ns_len = node_->get_effective_namespace().length();
+
+#ifdef IMAGE_TRANSPORT_USE_NODEINTERFACE
+  uint ns_prefix_len = std::string(node.get_node_base_interface()->get_namespace()).length();
+#else
+  uint ns_len = node->get_effective_namespace().length();
   // if a namespace is given (ns_len > 1), then strip one more
   // character to avoid a leading "/" that will then become a "."
   uint ns_prefix_len = ns_len > 1 ? ns_len + 1 : ns_len;
+#endif
   std::string param_base_name = base_topic.substr(ns_prefix_len);
   std::replace(param_base_name.begin(), param_base_name.end(), '/', '.');
   paramNamespace_ = param_base_name + "." + getTransportName() + ".";
@@ -100,7 +101,7 @@ void FFMPEGSubscriber::initialize(rclcpp::Node * node, const std::string & base_
   }
 }
 
-void FFMPEGSubscriber::declareParameter(rclcpp::Node * node, const ParameterDefinition & definition)
+void FFMPEGSubscriber::declareParameter(NodeType node, const ParameterDefinition & definition)
 {
   const auto v = definition.declare(node, paramNamespace_);
   const auto & n = definition.descriptor.name;
