@@ -32,28 +32,33 @@ using FFMPEGPacketConstPtr = FFMPEGPacket::ConstSharedPtr;
 class FFMPEGPublisher : public FFMPEGPublisherPlugin
 {
 public:
-#if defined(IMAGE_TRANSPORT_API_V1) || defined(IMAGE_TRANSPORT_API_V2)
-  using PublisherTFn = PublishFn;
-#else
+#ifdef IMAGE_TRANSPORT_USE_PUBLISHER_T
   using PublisherTFn = PublisherT;
+#else
+  using PublisherTFn = PublishFn;
 #endif
 #ifdef IMAGE_TRANSPORT_USE_QOS
   using QoSType = rclcpp::QoS;
 #else
   using QoSType = rmw_qos_profile_t;
 #endif
+#ifdef IMAGE_TRANSPORT_USE_NODEINTERFACE
+  using NodeType = image_transport::RequiredInterfaces;
+#else
+  using NodeType = rclcpp::Node *;
+#endif
+
   FFMPEGPublisher();
   ~FFMPEGPublisher() override;
   std::string getTransportName() const override { return "ffmpeg"; }
 
 protected:
-#if defined(IMAGE_TRANSPORT_API_V1) || defined(IMAGE_TRANSPORT_API_V2)
+#ifdef IMAGE_TRANSPORT_NEEDS_PUBLISHEROPTIONS
   void advertiseImpl(
-    rclcpp::Node * node, const std::string & base_topic, QoSType custom_qos) override;
-#else
-  void advertiseImpl(
-    rclcpp::Node * node, const std::string & base_topic, QoSType custom_qos,
+    NodeType node, const std::string & base_topic, QoSType custom_qos,
     rclcpp::PublisherOptions opt) override;
+#else
+  void advertiseImpl(NodeType node, const std::string & base_topic, QoSType custom_qos) override;
 #endif
   void publish(const Image & message, const PublisherTFn & publisher) const override;
   void shutdown() override;
@@ -63,8 +68,8 @@ private:
     const std::string & frame_id, const rclcpp::Time & stamp, const std::string & codec,
     uint32_t width, uint32_t height, uint64_t pts, uint8_t flags, uint8_t * data, size_t sz);
 
-  QoSType initialize(rclcpp::Node * node, const std::string & base_name, QoSType custom_qos);
-  void declareParameter(rclcpp::Node * node, const ParameterDefinition & definition);
+  QoSType initialize(NodeType node, const std::string & base_name, QoSType custom_qos);
+  void declareParameter(NodeType node, const ParameterDefinition & definition);
   void handleAVOptions(const std::string & opt);
   // variables ---------
   rclcpp::Logger logger_;

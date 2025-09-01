@@ -37,11 +37,26 @@ find_package(sensor_msgs REQUIRED)
 find_package(std_msgs REQUIRED)
 
 
+if(${image_transport_VERSION} VERSION_GREATER_EQUAL "3.1.0")
+  # Humble and later (formerly API_V2)
+  # add_definitions(-DIMAGE_TRANSPORT_API_V2)
+endif()
+
+if(${image_transport_VERSION} VERSION_GREATER_EQUAL "5.1.7")
+  # Jazzy and later (formerly API_V3)
+  add_definitions(-DIMAGE_TRANSPORT_USE_PUBLISHER_T)
+  add_definitions(-DIMAGE_TRANSPORT_NEEDS_PUBLISHEROPTIONS)
+  # add_definitions(-DIMAGE_TRANSPORT_API_V3)
+endif()
+
 if(${image_transport_VERSION} VERSION_GREATER_EQUAL "6.0.0")
   add_definitions(-DIMAGE_TRANSPORT_RESOLVES_BASE_TOPIC)
 endif()
 if(${image_transport_VERSION} VERSION_GREATER_EQUAL "6.3.0")
   add_definitions(-DIMAGE_TRANSPORT_USE_QOS)
+endif()
+if(${image_transport_VERSION} VERSION_GREATER_EQUAL "6.4.0")
+  add_definitions(-DIMAGE_TRANSPORT_USE_NODEINTERFACE)
 endif()
 
 set(LIBRARY_NAME ${PROJECT_NAME}_component)

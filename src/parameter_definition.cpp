@@ -18,17 +18,29 @@
 namespace ffmpeg_image_transport
 {
 rclcpp::ParameterValue ParameterDefinition::declare(
-  rclcpp::Node * node, const std::string & paramBase) const
+  NodeType node, const std::string & paramBase) const
 {
   // transport scoped parameter (e.g. image_raw.compressed.format)
   const std::string paramName = paramBase + descriptor.name;
   rclcpp::ParameterValue v;
+#ifdef IMAGE_TRANSPORT_USE_NODEINTERFACE
+  try {
+    v =
+      node.get_node_parameters_interface()->declare_parameter(paramName, defaultValue, descriptor);
+  } catch (const rclcpp::exceptions::ParameterAlreadyDeclaredException &) {
+    RCLCPP_DEBUG(
+      node.get_node_logging_interface()->get_logger(), "%s was previously declared",
+      descriptor.name.c_str());
+    v = node.get_node_parameters_interface()->get_parameter(paramName).get_parameter_value();
+  }
+#else
   try {
     v = node->declare_parameter(paramName, defaultValue, descriptor);
   } catch (const rclcpp::exceptions::ParameterAlreadyDeclaredException &) {
     RCLCPP_DEBUG(node->get_logger(), "%s was previously declared", descriptor.name.c_str());
     v = node->get_parameter(paramName).get_parameter_value();
   }
+#endif
   return (v);
 }
 }  // namespace ffmpeg_image_transport
