@@ -85,13 +85,13 @@ void FFMPEGSubscriber::initialize(NodeType node, const std::string & base_topic_
 #endif
 
 #ifdef IMAGE_TRANSPORT_USE_NODEINTERFACE
-  uint ns_prefix_len = std::string(node.get_node_base_interface()->get_namespace()).length();
+  uint ns_len = std::string(node.get_node_base_interface()->get_namespace()).length();
 #else
   uint ns_len = node->get_effective_namespace().length();
+#endif
   // if a namespace is given (ns_len > 1), then strip one more
   // character to avoid a leading "/" that will then become a "."
   uint ns_prefix_len = ns_len > 1 ? ns_len + 1 : ns_len;
-#endif
   std::string param_base_name = base_topic.substr(ns_prefix_len);
   std::replace(param_base_name.begin(), param_base_name.end(), '/', '.');
   paramNamespace_ = param_base_name + "." + getTransportName() + ".";
