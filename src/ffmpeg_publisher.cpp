@@ -23,29 +23,30 @@ namespace ffmpeg_image_transport
 {
 using ParameterValue = ParameterDefinition::ParameterValue;
 using ParameterDescriptor = ParameterDefinition::ParameterDescriptor;
+using ParameterType = rcl_interfaces::msg::ParameterType;
 
 static const ParameterDefinition params[] = {
   {ParameterValue("libx264"),
    ParameterDescriptor()
      .set__name("encoder")
-     .set__type(rcl_interfaces::msg::ParameterType::PARAMETER_STRING)
+     .set__type(ParameterType::PARAMETER_STRING)
      .set__description("ffmpeg encoder to use, see ffmpeg supported encoders")
      .set__read_only(false)},
   {ParameterValue(""),
    ParameterDescriptor()
      .set__name("encoder_av_options")
-     .set__type(rcl_interfaces::msg::ParameterType::PARAMETER_STRING)
+     .set__type(ParameterType::PARAMETER_STRING)
      .set__description("comma-separated list of AV options: profile:main,preset:ll")
      .set__read_only(false)},
   {ParameterValue(""), ParameterDescriptor()
                          .set__name("pixel_format")
-                         .set__type(rcl_interfaces::msg::ParameterType::PARAMETER_STRING)
+                         .set__type(ParameterType::PARAMETER_STRING)
                          .set__description("pixel format to use for encoding")
                          .set__read_only(false)},
   {ParameterValue(static_cast<int>(-1)),
    ParameterDescriptor()
      .set__name("qmax")
-     .set__type(rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER)
+     .set__type(ParameterType::PARAMETER_INTEGER)
      .set__description("max video quantizer scale, see ffmpeg docs")
      .set__read_only(false)
      .set__integer_range(
@@ -53,7 +54,7 @@ static const ParameterDefinition params[] = {
   {ParameterValue(static_cast<int64_t>(-1)),
    ParameterDescriptor()
      .set__name("bit_rate")
-     .set__type(rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER)
+     .set__type(ParameterType::PARAMETER_INTEGER)
      .set__description("target bit rate, see ffmpeg docs")
      .set__read_only(false)
      .set__integer_range({rcl_interfaces::msg::IntegerRange()
@@ -63,7 +64,7 @@ static const ParameterDefinition params[] = {
   {ParameterValue(static_cast<int>(-1)),
    ParameterDescriptor()
      .set__name("gop_size")
-     .set__type(rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER)
+     .set__type(ParameterType::PARAMETER_INTEGER)
      .set__description("gop size (distance between keyframes)")
      .set__read_only(false)
      .set__integer_range({rcl_interfaces::msg::IntegerRange()
@@ -73,7 +74,7 @@ static const ParameterDefinition params[] = {
   {ParameterValue(static_cast<int>(0)),
    ParameterDescriptor()
      .set__name("max_b_frames")
-     .set__type(rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER)
+     .set__type(ParameterType::PARAMETER_INTEGER)
      .set__description("max number of b frames")
      .set__read_only(false)
      .set__integer_range({rcl_interfaces::msg::IntegerRange()
@@ -82,7 +83,7 @@ static const ParameterDefinition params[] = {
                             .set__step(1)})},
   {ParameterValue(false), ParameterDescriptor()
                             .set__name("encoder_measure_performance")
-                            .set__type(rcl_interfaces::msg::ParameterType::PARAMETER_BOOL)
+                            .set__type(ParameterType::PARAMETER_BOOL)
                             .set__description("enable performance timing")
                             .set__read_only(false)},
 };
@@ -156,10 +157,10 @@ void FFMPEGPublisher::packetReady(
   msg->pts = pts;
   msg->flags = flags;
   msg->data.assign(data, data + sz);
-#if defined(IMAGE_TRANSPORT_API_V1) || defined(IMAGE_TRANSPORT_API_V2)
-  (*publishFunction_)(*msg);
-#else
+#ifdef IMAGE_TRANSPORT_USE_PUBLISHER_T
   (*publishFunction_)->publish(*msg);
+#else
+  (*publishFunction_)(*msg);
 #endif
 }
 
@@ -184,13 +185,13 @@ FFMPEGPublisher::QoSType FFMPEGPublisher::initialize(
 {
   // namespace handling code lifted from compressed_image_transport
 #ifdef IMAGE_TRANSPORT_USE_NODEINTERFACE
-  uint ns_prefix_len = std::string(node.get_node_base_interface()->get_namespace()).length();
+  uint ns_len = std::string(node.get_node_base_interface()->get_namespace()).length();
 #else
   uint ns_len = node->get_effective_namespace().length();
+#endif
   // if a namespace is given (ns_len > 1), then strip one more
   // character to avoid a leading "/" that will then become a "."
   uint ns_prefix_len = ns_len > 1 ? ns_len + 1 : ns_len;
-#endif
   std::string param_base_name = base_topic.substr(ns_prefix_len);
   std::replace(param_base_name.begin(), param_base_name.end(), '/', '.');
   paramNamespace_ = param_base_name + "." + getTransportName() + ".";
