@@ -128,9 +128,14 @@ public:
   }
   void initialize()
   {
-    image_transport::TransportHints hints(this);
+    // image_transport::TransportHints hints(this->get_node_interface());
     sub_ = std::make_shared<image_transport::Subscriber>(image_transport::create_subscription(
-      this, "camera/image", std::bind(&TestSubscriber::imageCallback, this, std::placeholders::_1),
+#ifdef IMAGE_TRANSPORT_USE_NODEINTERFACE
+      *this,
+#else
+      this,
+#endif
+      "camera/image", std::bind(&TestSubscriber::imageCallback, this, std::placeholders::_1),
       "ffmpeg", convert_profile(rmw_qos_profile_default)));
   }
   void shutDown()

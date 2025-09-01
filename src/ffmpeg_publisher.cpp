@@ -23,29 +23,30 @@ namespace ffmpeg_image_transport
 {
 using ParameterValue = ParameterDefinition::ParameterValue;
 using ParameterDescriptor = ParameterDefinition::ParameterDescriptor;
+using ParameterType = rcl_interfaces::msg::ParameterType;
 
 static const ParameterDefinition params[] = {
   {ParameterValue("libx264"),
    ParameterDescriptor()
      .set__name("encoder")
-     .set__type(rcl_interfaces::msg::ParameterType::PARAMETER_STRING)
+     .set__type(ParameterType::PARAMETER_STRING)
      .set__description("ffmpeg encoder to use, see ffmpeg supported encoders")
      .set__read_only(false)},
   {ParameterValue(""),
    ParameterDescriptor()
      .set__name("encoder_av_options")
-     .set__type(rcl_interfaces::msg::ParameterType::PARAMETER_STRING)
+     .set__type(ParameterType::PARAMETER_STRING)
      .set__description("comma-separated list of AV options: profile:main,preset:ll")
      .set__read_only(false)},
   {ParameterValue(""), ParameterDescriptor()
                          .set__name("pixel_format")
-                         .set__type(rcl_interfaces::msg::ParameterType::PARAMETER_STRING)
+                         .set__type(ParameterType::PARAMETER_STRING)
                          .set__description("pixel format to use for encoding")
                          .set__read_only(false)},
   {ParameterValue(static_cast<int>(-1)),
    ParameterDescriptor()
      .set__name("qmax")
-     .set__type(rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER)
+     .set__type(ParameterType::PARAMETER_INTEGER)
      .set__description("max video quantizer scale, see ffmpeg docs")
      .set__read_only(false)
      .set__integer_range(
@@ -53,7 +54,7 @@ static const ParameterDefinition params[] = {
   {ParameterValue(static_cast<int64_t>(-1)),
    ParameterDescriptor()
      .set__name("bit_rate")
-     .set__type(rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER)
+     .set__type(ParameterType::PARAMETER_INTEGER)
      .set__description("target bit rate, see ffmpeg docs")
      .set__read_only(false)
      .set__integer_range({rcl_interfaces::msg::IntegerRange()
@@ -63,7 +64,7 @@ static const ParameterDefinition params[] = {
   {ParameterValue(static_cast<int>(-1)),
    ParameterDescriptor()
      .set__name("gop_size")
-     .set__type(rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER)
+     .set__type(ParameterType::PARAMETER_INTEGER)
      .set__description("gop size (distance between keyframes)")
      .set__read_only(false)
      .set__integer_range({rcl_interfaces::msg::IntegerRange()
@@ -73,7 +74,7 @@ static const ParameterDefinition params[] = {
   {ParameterValue(static_cast<int>(0)),
    ParameterDescriptor()
      .set__name("max_b_frames")
-     .set__type(rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER)
+     .set__type(ParameterType::PARAMETER_INTEGER)
      .set__description("max number of b frames")
      .set__read_only(false)
      .set__integer_range({rcl_interfaces::msg::IntegerRange()
@@ -82,7 +83,7 @@ static const ParameterDefinition params[] = {
                             .set__step(1)})},
   {ParameterValue(false), ParameterDescriptor()
                             .set__name("encoder_measure_performance")
-                            .set__type(rcl_interfaces::msg::ParameterType::PARAMETER_BOOL)
+                            .set__type(ParameterType::PARAMETER_BOOL)
                             .set__description("enable performance timing")
                             .set__read_only(false)},
 };
@@ -101,7 +102,7 @@ void FFMPEGPublisher::shutdown()
 
 // This code was lifted from compressed_image_transport
 
-void FFMPEGPublisher::declareParameter(rclcpp::Node * node, const ParameterDefinition & definition)
+void FFMPEGPublisher::declareParameter(NodeType node, const ParameterDefinition & definition)
 {
   // transport scoped parameter (e.g. image_raw.compressed.format)
   const auto v = definition.declare(node, paramNamespace_);
@@ -156,35 +157,38 @@ void FFMPEGPublisher::packetReady(
   msg->pts = pts;
   msg->flags = flags;
   msg->data.assign(data, data + sz);
-#if defined(IMAGE_TRANSPORT_API_V1) || defined(IMAGE_TRANSPORT_API_V2)
-  (*publishFunction_)(*msg);
-#else
+#ifdef IMAGE_TRANSPORT_USE_PUBLISHER_T
   (*publishFunction_)->publish(*msg);
+#else
+  (*publishFunction_)(*msg);
 #endif
 }
 
-#if defined(IMAGE_TRANSPORT_API_V1) || defined(IMAGE_TRANSPORT_API_V2)
+#ifdef IMAGE_TRANSPORT_NEEDS_PUBLISHEROPTIONS
 void FFMPEGPublisher::advertiseImpl(
-  rclcpp::Node * node, const std::string & base_topic, rmw_qos_profile_t custom_qos)
-{
-  auto qos = initialize(node, base_topic, custom_qos);
-  FFMPEGPublisherPlugin::advertiseImpl(node, base_topic, qos);
-}
-#else
-void FFMPEGPublisher::advertiseImpl(
-  rclcpp::Node * node, const std::string & base_topic, QoSType custom_qos,
-  rclcpp::PublisherOptions opt)
+  NodeType node, const std::string & base_topic, QoSType custom_qos, rclcpp::PublisherOptions opt)
 {
   auto qos = initialize(node, base_topic, custom_qos);
   FFMPEGPublisherPlugin::advertiseImpl(node, base_topic, qos, opt);
 }
+#else
+void FFMPEGPublisher::advertiseImpl(
+  NodeType node, const std::string & base_topic, rmw_qos_profile_t custom_qos)
+{
+  auto qos = initialize(node, base_topic, custom_qos);
+  FFMPEGPublisherPlugin::advertiseImpl(node, base_topic, qos);
+}
 #endif
 
 FFMPEGPublisher::QoSType FFMPEGPublisher::initialize(
-  rclcpp::Node * node, const std::string & base_topic, QoSType custom_qos)
+  NodeType node, const std::string & base_topic, QoSType custom_qos)
 {
   // namespace handling code lifted from compressed_image_transport
+#ifdef IMAGE_TRANSPORT_USE_NODEINTERFACE
+  uint ns_len = std::string(node.get_node_base_interface()->get_namespace()).length();
+#else
   uint ns_len = node->get_effective_namespace().length();
+#endif
   // if a namespace is given (ns_len > 1), then strip one more
   // character to avoid a leading "/" that will then become a "."
   uint ns_prefix_len = ns_len > 1 ? ns_len + 1 : ns_len;

@@ -24,20 +24,25 @@
 
 namespace ffmpeg_image_transport
 {
-using Image = sensor_msgs::msg::Image;
-using ImageConstPtr = Image::ConstSharedPtr;
-using ffmpeg_image_transport_msgs::msg::FFMPEGPacket;
-using FFMPEGPacketConstPtr = FFMPEGPacket::ConstSharedPtr;
 using FFMPEGSubscriberPlugin = image_transport::SimpleSubscriberPlugin<FFMPEGPacket>;
-#ifdef IMAGE_TRANSPORT_USE_QOS
-using QoSType = rclcpp::QoS;
-#else
-using QoSType = rmw_qos_profile_t;
-#endif
-
 class FFMPEGSubscriber : public FFMPEGSubscriberPlugin
 {
 public:
+  using Image = sensor_msgs::msg::Image;
+  using ImageConstPtr = Image::ConstSharedPtr;
+  using FFMPEGPacket = ffmpeg_image_transport_msgs::msg::FFMPEGPacket;
+  using FFMPEGPacketConstPtr = FFMPEGPacket::ConstSharedPtr;
+#ifdef IMAGE_TRANSPORT_USE_QOS
+  using QoSType = rclcpp::QoS;
+#else
+  using QoSType = rmw_qos_profile_t;
+#endif
+#ifdef IMAGE_TRANSPORT_USE_NODEINTERFACE
+  using NodeType = image_transport::RequiredInterfaces;
+#else
+  using NodeType = rclcpp::Node *;
+#endif
+
   FFMPEGSubscriber();
   ~FFMPEGSubscriber() override;
 
@@ -46,26 +51,22 @@ public:
 protected:
   void internalCallback(const FFMPEGPacketConstPtr & msg, const Callback & user_cb) override;
 
-#ifdef IMAGE_TRANSPORT_API_V1
   void subscribeImpl(
-    rclcpp::Node * node, const std::string & base_topic, const Callback & callback,
-    QoSType custom_qos) override;
-#else
-  void subscribeImpl(
-    rclcpp::Node * node, const std::string & base_topic, const Callback & callback,
-    QoSType custom_qos, rclcpp::SubscriptionOptions) override;
-#endif
+    NodeType node, const std::string & base_topic, const Callback & callback, QoSType custom_qos,
+    rclcpp::SubscriptionOptions) override;
+
   void shutdown() override;
+  rclcpp::Logger logger_;
+  rclcpp::node_interfaces::NodeParametersInterface::SharedPtr node_param_interface_;
 
 private:
   void frameReady(const ImageConstPtr & img, bool /*isKeyFrame*/) const;
-  void initialize(rclcpp::Node * node, const std::string & base_topic);
+  void initialize(NodeType node, const std::string & base_topic);
   std::string getDecodersFromMap(const std::string & encoding);
-  void declareParameter(rclcpp::Node * node, const ParameterDefinition & definition);
+  void declareParameter(NodeType node, const ParameterDefinition & definition);
   void handleAVOptions(const std::string & opt);
   // -------------- variables
-  rclcpp::Logger logger_;
-  rclcpp::Node * node_{nullptr};
+  NodeType node_;
   ffmpeg_encoder_decoder::Decoder decoder_;
   std::string decoderType_;
   const Callback * userCallback_{nullptr};
