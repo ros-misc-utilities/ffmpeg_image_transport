@@ -3,11 +3,13 @@
     <description>
       This plugin encodes frames into ffmpeg compressed packets
     </description>
+    <message_type>ffmpeg_image_transport_msgs/msg/FFMPEGPacket</message_type>
   </class>
   <class name="image_transport/ffmpeg_sub" type="ffmpeg_image_transport::FFMPEGSubscriber" base_class_type="image_transport::SubscriberPlugin">
     <description>
       This plugin decodes frames from ffmpeg compressed packets
     </description>
+    <message_type>ffmpeg_image_transport_msgs/msg/FFMPEGPacket</message_type>
   </class>
 </library>
 		  
