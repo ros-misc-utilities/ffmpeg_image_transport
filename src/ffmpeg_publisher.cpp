@@ -31,18 +31,22 @@ static const ParameterDefinition params[] = {
      .set__name("encoder")
      .set__type(ParameterType::PARAMETER_STRING)
      .set__description("ffmpeg encoder to use, see ffmpeg supported encoders")
-     .set__read_only(false)},
+     .set__read_only(false),
+   ""},
   {ParameterValue(""),
    ParameterDescriptor()
      .set__name("encoder_av_options")
      .set__type(ParameterType::PARAMETER_STRING)
      .set__description("comma-separated list of AV options: profile:main,preset:ll")
-     .set__read_only(false)},
-  {ParameterValue(""), ParameterDescriptor()
-                         .set__name("pixel_format")
-                         .set__type(ParameterType::PARAMETER_STRING)
-                         .set__description("pixel format to use for encoding")
-                         .set__read_only(false)},
+     .set__read_only(false),
+   ""},
+  {ParameterValue(""),
+   ParameterDescriptor()
+     .set__name("pixel_format")
+     .set__type(ParameterType::PARAMETER_STRING)
+     .set__description("pixel format to use for encoding")
+     .set__read_only(false),
+   ""},
   {ParameterValue(static_cast<int>(-1)),
    ParameterDescriptor()
      .set__name("qmax")
@@ -50,7 +54,8 @@ static const ParameterDefinition params[] = {
      .set__description("max video quantizer scale, see ffmpeg docs")
      .set__read_only(false)
      .set__integer_range(
-       {rcl_interfaces::msg::IntegerRange().set__from_value(-1).set__to_value(1024).set__step(1)})},
+       {rcl_interfaces::msg::IntegerRange().set__from_value(-1).set__to_value(1024).set__step(1)}),
+   ""},
   {ParameterValue(static_cast<int64_t>(-1)),
    ParameterDescriptor()
      .set__name("bit_rate")
@@ -60,8 +65,9 @@ static const ParameterDefinition params[] = {
      .set__integer_range({rcl_interfaces::msg::IntegerRange()
                             .set__from_value(-1)
                             .set__to_value(std::numeric_limits<int>::max())
-                            .set__step(1)})},
-  {ParameterValue(static_cast<int>(-1)),
+                            .set__step(1)}),
+   ""},
+  {ParameterValue(static_cast<int>(10)),
    ParameterDescriptor()
      .set__name("gop_size")
      .set__type(ParameterType::PARAMETER_INTEGER)
@@ -70,7 +76,8 @@ static const ParameterDefinition params[] = {
      .set__integer_range({rcl_interfaces::msg::IntegerRange()
                             .set__from_value(-1)
                             .set__to_value(std::numeric_limits<int>::max())
-                            .set__step(1)})},
+                            .set__step(1)}),
+   "gop_size not set, defaulting to 10. This may severely affect lag and performance!"},
   {ParameterValue(static_cast<int>(0)),
    ParameterDescriptor()
      .set__name("max_b_frames")
@@ -80,12 +87,15 @@ static const ParameterDefinition params[] = {
      .set__integer_range({rcl_interfaces::msg::IntegerRange()
                             .set__from_value(0)
                             .set__to_value(std::numeric_limits<int>::max())
-                            .set__step(1)})},
-  {ParameterValue(false), ParameterDescriptor()
-                            .set__name("encoder_measure_performance")
-                            .set__type(ParameterType::PARAMETER_BOOL)
-                            .set__description("enable performance timing")
-                            .set__read_only(false)},
+                            .set__step(1)}),
+   ""},
+  {ParameterValue(false),
+   ParameterDescriptor()
+     .set__name("encoder_measure_performance")
+     .set__type(ParameterType::PARAMETER_BOOL)
+     .set__description("enable performance timing")
+     .set__read_only(false),
+   ""},
 };
 
 FFMPEGPublisher::FFMPEGPublisher() : logger_(rclcpp::get_logger("FFMPEGPublisher")) {}

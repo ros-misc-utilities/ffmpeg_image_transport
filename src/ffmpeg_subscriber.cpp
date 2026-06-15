@@ -29,16 +29,20 @@ using PValue = ParameterDefinition::ParameterValue;
 using PDescriptor = ParameterDefinition::ParameterDescriptor;
 
 static const ParameterDefinition params[] = {
-  {PValue(""), PDescriptor()
-                 .set__name("decoder_av_options")
-                 .set__type(rcl_interfaces::msg::ParameterType::PARAMETER_STRING)
-                 .set__description("comma-separated list of AV options: delay:0")
-                 .set__read_only(false)},
-  {PValue(false), PDescriptor()
-                    .set__name("decoder_measure_performance")
-                    .set__type(rcl_interfaces::msg::ParameterType::PARAMETER_BOOL)
-                    .set__description("enable performance timing")
-                    .set__read_only(false)}};
+  {PValue(""),
+   PDescriptor()
+     .set__name("decoder_av_options")
+     .set__type(rcl_interfaces::msg::ParameterType::PARAMETER_STRING)
+     .set__description("comma-separated list of AV options: delay:0")
+     .set__read_only(false),
+   ""},
+  {PValue(false),
+   PDescriptor()
+     .set__name("decoder_measure_performance")
+     .set__type(rcl_interfaces::msg::ParameterType::PARAMETER_BOOL)
+     .set__description("enable performance timing")
+     .set__read_only(false),
+   ""}};
 
 FFMPEGSubscriber::FFMPEGSubscriber() : logger_(rclcpp::get_logger("FFMPEGSubscriber"))
 {
@@ -126,11 +130,13 @@ std::string FFMPEGSubscriber::getDecodersFromMap(const std::string & encoding)
       p_name += (j == 0 ? "." : "_") + x[j];
     }
     ParameterDefinition pdef{
-      PValue(""), PDescriptor()
-                    .set__name("decoders" + p_name)
-                    .set__type(rcl_interfaces::msg::ParameterType::PARAMETER_STRING)
-                    .set__description("decoders for encoding: " + p_name)
-                    .set__read_only(false)};
+      PValue(""),
+      PDescriptor()
+        .set__name("decoders" + p_name)
+        .set__type(rcl_interfaces::msg::ParameterType::PARAMETER_STRING)
+        .set__description("decoders for encoding: " + p_name)
+        .set__read_only(false),
+      ""};
     decoders = pdef.declare(node_, paramNamespace_).get<std::string>();
     if (!decoders.empty()) {
       break;

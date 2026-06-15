@@ -35,6 +35,7 @@ struct ParameterDefinition
   // ---- variables
   ParameterValue defaultValue;
   ParameterDescriptor descriptor;
+  std::string warningIfNotSet;
 };
 }  // namespace ffmpeg_image_transport
 

@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.16)
 
 project(ffmpeg_image_transport)
 
@@ -9,20 +9,6 @@ endif()
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic -Werror)
-endif()
-
-# the image transport api changed between distros
-if(DEFINED ENV{ROS_DISTRO})
-  if($ENV{ROS_DISTRO} STREQUAL "foxy" OR
-      $ENV{ROS_DISTRO} STREQUAL "galactic")
-      add_definitions(-DIMAGE_TRANSPORT_API_V1)
-    elseif($ENV{ROS_DISTRO} STREQUAL "humble")
-      add_definitions(-DIMAGE_TRANSPORT_API_V2)
-    else()
-      add_definitions(-DIMAGE_TRANSPORT_API_V3)
-    endif()
-else()
-  message(ERROR "ROS_DISTRO environment variable is not set!")
 endif()
 
 find_package(ament_cmake REQUIRED)
@@ -37,16 +23,9 @@ find_package(sensor_msgs REQUIRED)
 find_package(std_msgs REQUIRED)
 
 
-if(${image_transport_VERSION} VERSION_GREATER_EQUAL "3.1.0")
-  # Humble and later (formerly API_V2)
-  # add_definitions(-DIMAGE_TRANSPORT_API_V2)
-endif()
-
-if(${image_transport_VERSION} VERSION_GREATER_EQUAL "5.1.7")
-  # Jazzy and later (formerly API_V3)
+if(${image_transport_VERSION} VERSION_GREATER_EQUAL "5.0.0")
   add_definitions(-DIMAGE_TRANSPORT_USE_PUBLISHER_T)
   add_definitions(-DIMAGE_TRANSPORT_NEEDS_PUBLISHEROPTIONS)
-  # add_definitions(-DIMAGE_TRANSPORT_API_V3)
 endif()
 
 if(${image_transport_VERSION} VERSION_GREATER_EQUAL "6.0.0")
@@ -140,7 +119,8 @@ if(BUILD_TESTING)
 
   find_package(ament_cmake_gtest REQUIRED)
   ament_add_gtest(${PROJECT_NAME}_test test/test_1.cpp
-    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/test)
+    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/test
+    APPEND_ENV AMENT_PREFIX_PATH=${CMAKE_INSTALL_PREFIX})
   target_include_directories(${PROJECT_NAME}_test PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>)

@@ -1,4 +1,6 @@
 <library path="ffmpeg_image_transport_component">
+  <transport_name>ffmpeg</transport_name>
+  <message_type>ffmpeg_image_transport_msgs/msg/FFMPEGPacket</message_type>
   <class name="image_transport/ffmpeg_pub" type="ffmpeg_image_transport::FFMPEGPublisher" base_class_type="image_transport::PublisherPlugin">
     <description>
       This plugin encodes frames into ffmpeg compressed packets

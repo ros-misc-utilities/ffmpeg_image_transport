@@ -20,27 +20,25 @@ namespace ffmpeg_image_transport
 rclcpp::ParameterValue ParameterDefinition::declare(
   NodeType node, const std::string & paramBase) const
 {
-  // transport scoped parameter (e.g. image_raw.compressed.format)
   const std::string paramName = paramBase + descriptor.name;
   rclcpp::ParameterValue v;
 #ifdef IMAGE_TRANSPORT_USE_NODEINTERFACE
-  try {
-    v =
-      node.get_node_parameters_interface()->declare_parameter(paramName, defaultValue, descriptor);
-  } catch (const rclcpp::exceptions::ParameterAlreadyDeclaredException &) {
-    RCLCPP_DEBUG(
-      node.get_node_logging_interface()->get_logger(), "%s was previously declared",
-      descriptor.name.c_str());
-    v = node.get_node_parameters_interface()->get_parameter(paramName).get_parameter_value();
-  }
+  auto params = node.get_node_parameters_interface();
+  auto logger = node.get_node_logging_interface()->get_logger();
 #else
-  try {
-    v = node->declare_parameter(paramName, defaultValue, descriptor);
-  } catch (const rclcpp::exceptions::ParameterAlreadyDeclaredException &) {
-    RCLCPP_DEBUG(node->get_logger(), "%s was previously declared", descriptor.name.c_str());
-    v = node->get_parameter(paramName).get_parameter_value();
-  }
+  auto params = node->get_node_parameters_interface();
+  auto logger = node->get_node_logging_interface()->get_logger();
 #endif
+  try {
+    const auto & map = params->get_parameter_overrides();
+    if (map.find(paramName) == map.end() && !warningIfNotSet.empty()) {
+      RCLCPP_WARN_STREAM(logger, warningIfNotSet);
+    }
+    v = params->declare_parameter(paramName, defaultValue, descriptor);
+  } catch (const rclcpp::exceptions::ParameterAlreadyDeclaredException &) {
+    RCLCPP_DEBUG(logger, "%s was previously declared", descriptor.name.c_str());
+    v = params->get_parameter(paramName).get_parameter_value();
+  }
   return (v);
 }
 }  // namespace ffmpeg_image_transport
