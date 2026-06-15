@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.16)
 
 project(ffmpeg_image_transport)
 
@@ -119,7 +119,8 @@ if(BUILD_TESTING)
 
   find_package(ament_cmake_gtest REQUIRED)
   ament_add_gtest(${PROJECT_NAME}_test test/test_1.cpp
-    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/test)
+    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/test
+    APPEND_ENV AMENT_PREFIX_PATH=${CMAKE_INSTALL_PREFIX})
   target_include_directories(${PROJECT_NAME}_test PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>)
