@@ -2,8 +2,8 @@
 Changelog for package ffmpeg_image_transport
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+3.0.4 (2026-06-15)
+------------------
 * move message_type to the library level in ffmpeg_plugins.xml
 * add message_type to ffmpeg publisher and subscriber plugins
 * fix gtest issues on humble
