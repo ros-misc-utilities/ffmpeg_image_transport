@@ -2,6 +2,18 @@
 Changelog for package ffmpeg_image_transport
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* move message_type to the library level in ffmpeg_plugins.xml
+* add message_type to ffmpeg publisher and subscriber plugins
+* fix gtest issues on humble
+* fix tests under rolling and lyrical
+* msgs and encoder/decoder are now in all rosdistros
+* update required cmake to 3.16
+* default gop_size to 10 again, but warn if not set
+* use correct img transp version 5.0.0
+* Contributors: Bernd Pfrommer, Tony Najjar
+
 3.0.3 (2025-09-01)
 ------------------
 * support new image transport node interface
