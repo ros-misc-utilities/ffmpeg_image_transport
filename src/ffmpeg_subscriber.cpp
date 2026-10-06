@@ -42,6 +42,13 @@ static const ParameterDefinition params[] = {
      .set__type(rcl_interfaces::msg::ParameterType::PARAMETER_BOOL)
      .set__description("enable performance timing")
      .set__read_only(false),
+   ""},
+  {PValue(""),
+   PDescriptor()
+     .set__name("output_encoding")
+     .set__type(rcl_interfaces::msg::ParameterType::PARAMETER_STRING)
+     .set__description("force decoded image encoding, e.g. bgr8 (empty = keep source encoding)")
+     .set__read_only(false),
    ""}};
 
 FFMPEGSubscriber::FFMPEGSubscriber() : logger_(rclcpp::get_logger("FFMPEGSubscriber"))
@@ -113,6 +120,11 @@ void FFMPEGSubscriber::declareParameter(NodeType node, const ParameterDefinition
     handleAVOptions(v.get<std::string>());
   } else if (n == "decoder_measure_performance") {
     decoder_.setMeasurePerformance(v.get<bool>());
+  } else if (n == "output_encoding") {
+    outputEncoding_ = v.get<std::string>();
+    if (!outputEncoding_.empty()) {
+      RCLCPP_INFO_STREAM(logger_, "forcing decoded output encoding: " << outputEncoding_);
+    }
   } else {
     RCLCPP_ERROR_STREAM(logger_, "unknown parameter: " << n);
   }
@@ -194,6 +206,12 @@ void FFMPEGSubscriber::internalCallback(const FFMPEGPacketConstPtr & msg, const 
   RCLCPP_INFO_STREAM(logger_, "trying decoders in order: " << decoder_names);
 
   for (const auto & dec : ffmpeg_encoder_decoder::utils::split_decoders(decoder_names)) {
+    // Force the decoded image encoding if requested. Must be (re)applied before
+    // each initialize(): decoder_.reset() on a failed attempt clears it, and
+    // Decoder::setEncoding() only honors it when set prior to initialization.
+    if (!outputEncoding_.empty()) {
+      decoder_.setOutputMessageEncoding(outputEncoding_);
+    }
     try {
       if (!decoder_.initialize(
             msg->encoding, std::bind(&FFMPEGSubscriber::frameReady, this, _1, _2), dec)) {

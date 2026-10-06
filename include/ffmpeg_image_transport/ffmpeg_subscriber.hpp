@@ -71,6 +71,7 @@ private:
   std::string decoderType_;
   const Callback * userCallback_{nullptr};
   std::string paramNamespace_;
+  std::string outputEncoding_;  // if set, forces decoded image encoding (e.g. bgr8)
 };
 }  // namespace ffmpeg_image_transport
 #endif  // FFMPEG_IMAGE_TRANSPORT__FFMPEG_SUBSCRIBER_HPP_
