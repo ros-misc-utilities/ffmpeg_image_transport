@@ -96,14 +96,14 @@ static const ParameterDefinition params[] = {
      .set__description("enable performance timing")
      .set__read_only(false),
    ""},
-  {ParameterValue(""),
+  {ParameterValue("bgr8"),
    ParameterDescriptor()
      .set__name("cv_bridge_target_format")
      .set__type(ParameterType::PARAMETER_STRING)
      .set__description(
        "cv_bridge target format for the first image conversion, e.g. bayer_rggb8 to "
        "skip the CPU debayer for single-channel/Bayer sources (see ffmpeg_encoder_decoder "
-       "README). Empty (default) keeps the plugin default of bgr8.")
+       "README). Defaults to bgr8, matching the encoder's own default.")
      .set__read_only(false),
    ""},
 };
@@ -143,10 +143,8 @@ void FFMPEGPublisher::declareParameter(NodeType node, const ParameterDefinition 
   } else if (n == "gop_size") {
     encoder_.setGOPSize(v.get<int>());
   } else if (n == "cv_bridge_target_format") {
-    if (!v.get<std::string>().empty()) {
-      RCLCPP_INFO_STREAM(logger_, "setting cv_bridge_target_format: " << v.get<std::string>());
-      encoder_.setCVBridgeTargetFormat(v.get<std::string>());
-    }
+    RCLCPP_INFO_STREAM(logger_, "setting cv_bridge_target_format: " << v.get<std::string>());
+    encoder_.setCVBridgeTargetFormat(v.get<std::string>());
   } else if (n == "encoder_measure_performance") {
     measurePerformance_ = v.get<bool>();
     encoder_.setMeasurePerformance(v.get<bool>());
