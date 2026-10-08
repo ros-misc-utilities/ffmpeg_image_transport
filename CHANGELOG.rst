@@ -2,6 +2,14 @@
 Changelog for package ffmpeg_image_transport
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* document output_encoding and cv_bridge_target_format parameters
+* Add output_encoding param to FFMPEGSubscriber to force decoded image encoding when the encoder side used a non-default cv_bridge_target_format like bayer. Signed-off by: Marcello Cellina
+* set bgr8 as default target format as in the encoder lib. Signed off by Marcello Cellina
+* Add cv_bridge_target_format param to force encoder's cv_bridge conversion format. Signed-off by Marcello Cellina
+* Contributors: Bernd Pfrommer, CELLINA Marcello (JRC-ISPRA), Marcello Cellina
+
 3.0.4 (2026-06-15)
 ------------------
 * move message_type to the library level in ffmpeg_plugins.xml
