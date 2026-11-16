@@ -180,14 +180,14 @@ void FFMPEGPublisher::packetReady(
   msg->pts = pts;
   msg->flags = flags;
   msg->data.assign(data, data + sz);
-#ifdef IMAGE_TRANSPORT_USE_PUBLISHER_T
+#ifdef FFMPEG_IMAGE_TRANSPORT_USE_PUBLISHER_T
   (*publishFunction_)->publish(*msg);
 #else
   (*publishFunction_)(*msg);
 #endif
 }
 
-#ifdef IMAGE_TRANSPORT_NEEDS_PUBLISHEROPTIONS
+#ifdef FFMPEG_IMAGE_TRANSPORT_NEEDS_PUBLISHEROPTIONS
 void FFMPEGPublisher::advertiseImpl(
   NodeType node, const std::string & base_topic, QoSType custom_qos, rclcpp::PublisherOptions opt)
 {
@@ -207,7 +207,7 @@ FFMPEGPublisher::QoSType FFMPEGPublisher::initialize(
   NodeType node, const std::string & base_topic, QoSType custom_qos)
 {
   // namespace handling code lifted from compressed_image_transport
-#ifdef IMAGE_TRANSPORT_USE_NODEINTERFACE
+#ifdef FFMPEG_IMAGE_TRANSPORT_USE_NODEINTERFACE
   uint ns_len = std::string(node.get_node_base_interface()->get_namespace()).length();
 #else
   uint ns_len = node->get_effective_namespace().length();
@@ -223,7 +223,7 @@ FFMPEGPublisher::QoSType FFMPEGPublisher::initialize(
     declareParameter(node, p);
   }
   // bump queue size to 2 * distance between keyframes
-#ifdef IMAGE_TRANSPORT_USE_QOS
+#ifdef FFMPEG_IMAGE_TRANSPORT_USE_QOS
   custom_qos.keep_last(
     std::max(static_cast<int>(custom_qos.get_rmw_qos_profile().depth), 2 * encoder_.getGOPSize()));
 #else

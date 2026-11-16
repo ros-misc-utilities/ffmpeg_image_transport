@@ -17,6 +17,7 @@
 #define FFMPEG_IMAGE_TRANSPORT__FFMPEG_SUBSCRIBER_HPP_
 
 #include <ffmpeg_encoder_decoder/decoder.hpp>
+#include <ffmpeg_image_transport/image_transport_features.hpp>
 #include <ffmpeg_image_transport/parameter_definition.hpp>
 #include <ffmpeg_image_transport_msgs/msg/ffmpeg_packet.hpp>
 #include <image_transport/simple_subscriber_plugin.hpp>
@@ -32,12 +33,12 @@ public:
   using ImageConstPtr = Image::ConstSharedPtr;
   using FFMPEGPacket = ffmpeg_image_transport_msgs::msg::FFMPEGPacket;
   using FFMPEGPacketConstPtr = FFMPEGPacket::ConstSharedPtr;
-#ifdef IMAGE_TRANSPORT_USE_QOS
+#ifdef FFMPEG_IMAGE_TRANSPORT_USE_QOS
   using QoSType = rclcpp::QoS;
 #else
   using QoSType = rmw_qos_profile_t;
 #endif
-#ifdef IMAGE_TRANSPORT_USE_NODEINTERFACE
+#ifdef FFMPEG_IMAGE_TRANSPORT_USE_NODEINTERFACE
   using NodeType = image_transport::RequiredInterfaces;
 #else
   using NodeType = rclcpp::Node *;

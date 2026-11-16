@@ -22,7 +22,7 @@ rclcpp::ParameterValue ParameterDefinition::declare(
 {
   const std::string paramName = paramBase + descriptor.name;
   rclcpp::ParameterValue v;
-#ifdef IMAGE_TRANSPORT_USE_NODEINTERFACE
+#ifdef FFMPEG_IMAGE_TRANSPORT_USE_NODEINTERFACE
   auto params = node.get_node_parameters_interface();
   auto logger = node.get_node_logging_interface()->get_logger();
 #else

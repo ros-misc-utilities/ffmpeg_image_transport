@@ -23,20 +23,27 @@ find_package(sensor_msgs REQUIRED)
 find_package(std_msgs REQUIRED)
 
 
+# The installed headers depend on these, so they go into a generated header
+# instead of compile definitions that downstream packages would not see.
 if(${image_transport_VERSION} VERSION_GREATER_EQUAL "5.0.0")
-  add_definitions(-DIMAGE_TRANSPORT_USE_PUBLISHER_T)
-  add_definitions(-DIMAGE_TRANSPORT_NEEDS_PUBLISHEROPTIONS)
+  set(FFMPEG_IMAGE_TRANSPORT_USE_PUBLISHER_T ON)
+  set(FFMPEG_IMAGE_TRANSPORT_NEEDS_PUBLISHEROPTIONS ON)
 endif()
 
 if(${image_transport_VERSION} VERSION_GREATER_EQUAL "6.0.0")
-  add_definitions(-DIMAGE_TRANSPORT_RESOLVES_BASE_TOPIC)
+  set(FFMPEG_IMAGE_TRANSPORT_RESOLVES_BASE_TOPIC ON)
 endif()
 if(${image_transport_VERSION} VERSION_GREATER_EQUAL "6.3.0")
-  add_definitions(-DIMAGE_TRANSPORT_USE_QOS)
+  set(FFMPEG_IMAGE_TRANSPORT_USE_QOS ON)
 endif()
 if(${image_transport_VERSION} VERSION_GREATER_EQUAL "6.4.0")
-  add_definitions(-DIMAGE_TRANSPORT_USE_NODEINTERFACE)
+  set(FFMPEG_IMAGE_TRANSPORT_USE_NODEINTERFACE ON)
 endif()
+
+set(GENERATED_INCLUDE_DIR ${CMAKE_CURRENT_BINARY_DIR}/include)
+configure_file(
+  cmake/image_transport_features.hpp.in
+  ${GENERATED_INCLUDE_DIR}/${PROJECT_NAME}/image_transport_features.hpp)
 
 set(LIBRARY_NAME ${PROJECT_NAME}_component)
 
@@ -51,6 +58,7 @@ add_library(
 
 target_include_directories(${LIBRARY_NAME} PUBLIC
   "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
+  "$<BUILD_INTERFACE:${GENERATED_INCLUDE_DIR}>"
   "$<INSTALL_INTERFACE:include>")
 
 target_link_libraries(${LIBRARY_NAME}
@@ -89,7 +97,7 @@ install(DIRECTORY
   FILES_MATCHING PATTERN "*.py")
 
 install(
-  DIRECTORY include/
+  DIRECTORY include/ ${GENERATED_INCLUDE_DIR}/
   DESTINATION include
 )
 
@@ -123,6 +131,7 @@ if(BUILD_TESTING)
     APPEND_ENV AMENT_PREFIX_PATH=${CMAKE_INSTALL_PREFIX})
   target_include_directories(${PROJECT_NAME}_test PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<BUILD_INTERFACE:${GENERATED_INCLUDE_DIR}>
     $<INSTALL_INTERFACE:include>)
   target_link_libraries(${PROJECT_NAME}_test
     ${sensor_msgs_TARGETS} rclcpp::rclcpp image_transport::image_transport)

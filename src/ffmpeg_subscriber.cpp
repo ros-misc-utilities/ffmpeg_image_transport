@@ -53,7 +53,7 @@ static const ParameterDefinition params[] = {
 
 FFMPEGSubscriber::FFMPEGSubscriber() : logger_(rclcpp::get_logger("FFMPEGSubscriber"))
 {
-#ifndef IMAGE_TRANSPORT_USE_NODEINTERFACE
+#ifndef FFMPEG_IMAGE_TRANSPORT_USE_NODEINTERFACE
   node_ = nullptr;
 #endif
 }
@@ -77,7 +77,7 @@ void FFMPEGSubscriber::subscribeImpl(
   rclcpp::SubscriptionOptions opt)
 {
   initialize(node, base_topic);
-#ifdef IMAGE_TRANSPORT_NEEDS_PUBLISHEROPTIONS
+#ifdef FFMPEG_IMAGE_TRANSPORT_NEEDS_PUBLISHEROPTIONS
   FFMPEGSubscriberPlugin::subscribeImpl(node, base_topic, callback, custom_qos, opt);
 #else
   (void)opt;  // to suppress compiler warning
@@ -88,14 +88,14 @@ void FFMPEGSubscriber::subscribeImpl(
 void FFMPEGSubscriber::initialize(NodeType node, const std::string & base_topic_o)
 {
   node_ = node;
-#ifdef IMAGE_TRANSPORT_RESOLVES_BASE_TOPIC
+#ifdef FFMPEG_IMAGE_TRANSPORT_RESOLVES_BASE_TOPIC
   const std::string base_topic = base_topic_o;
 #else
   const std::string base_topic =
     node_->get_node_topics_interface()->resolve_topic_name(base_topic_o);
 #endif
 
-#ifdef IMAGE_TRANSPORT_USE_NODEINTERFACE
+#ifdef FFMPEG_IMAGE_TRANSPORT_USE_NODEINTERFACE
   uint ns_len = std::string(node.get_node_base_interface()->get_namespace()).length();
 #else
   uint ns_len = node->get_effective_namespace().length();

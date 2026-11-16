@@ -17,6 +17,7 @@
 #define FFMPEG_IMAGE_TRANSPORT__FFMPEG_PUBLISHER_HPP_
 
 #include <ffmpeg_encoder_decoder/encoder.hpp>
+#include <ffmpeg_image_transport/image_transport_features.hpp>
 #include <ffmpeg_image_transport/parameter_definition.hpp>
 #include <ffmpeg_image_transport_msgs/msg/ffmpeg_packet.hpp>
 #include <image_transport/simple_publisher_plugin.hpp>
@@ -32,17 +33,17 @@ using FFMPEGPacketConstPtr = FFMPEGPacket::ConstSharedPtr;
 class FFMPEGPublisher : public FFMPEGPublisherPlugin
 {
 public:
-#ifdef IMAGE_TRANSPORT_USE_PUBLISHER_T
+#ifdef FFMPEG_IMAGE_TRANSPORT_USE_PUBLISHER_T
   using PublisherTFn = PublisherT;
 #else
   using PublisherTFn = PublishFn;
 #endif
-#ifdef IMAGE_TRANSPORT_USE_QOS
+#ifdef FFMPEG_IMAGE_TRANSPORT_USE_QOS
   using QoSType = rclcpp::QoS;
 #else
   using QoSType = rmw_qos_profile_t;
 #endif
-#ifdef IMAGE_TRANSPORT_USE_NODEINTERFACE
+#ifdef FFMPEG_IMAGE_TRANSPORT_USE_NODEINTERFACE
   using NodeType = image_transport::RequiredInterfaces;
 #else
   using NodeType = rclcpp::Node *;
@@ -53,7 +54,7 @@ public:
   std::string getTransportName() const override { return "ffmpeg"; }
 
 protected:
-#ifdef IMAGE_TRANSPORT_NEEDS_PUBLISHEROPTIONS
+#ifdef FFMPEG_IMAGE_TRANSPORT_NEEDS_PUBLISHEROPTIONS
   void advertiseImpl(
     NodeType node, const std::string & base_topic, QoSType custom_qos,
     rclcpp::PublisherOptions opt) override;
