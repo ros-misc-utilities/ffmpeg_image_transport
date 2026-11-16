@@ -15,6 +15,7 @@
 
 #include <gtest/gtest.h>
 
+#include <ffmpeg_image_transport/image_transport_features.hpp>
 #include <image_transport/image_transport.hpp>
 #include <rclcpp/rclcpp.hpp>
 #include <sensor_msgs/image_encodings.hpp>
@@ -59,7 +60,7 @@ public:
   // since it only reads the parameters when the plugin is loaded
   void initialize()
   {
-#ifdef IMAGE_TRANSPORT_USE_NODEINTERFACE
+#ifdef FFMPEG_IMAGE_TRANSPORT_USE_NODEINTERFACE
     image_transport_ = std::make_shared<ImageTransport>(image_transport::RequiredInterfaces(*this));
 #else
     image_transport_ = std::make_shared<ImageTransport>(std::shared_ptr<Node>(this, [](auto *) {}));
@@ -107,7 +108,7 @@ private:
   std::string parameter_base_;
 };
 
-#ifdef IMAGE_TRANSPORT_USE_QOS
+#ifdef FFMPEG_IMAGE_TRANSPORT_USE_QOS
 static rclcpp::QoS convert_profile(const rmw_qos_profile_t & p)
 {
   return (rclcpp::QoS(rclcpp::QoSInitialization::from_rmw(p), p));
@@ -134,7 +135,7 @@ public:
   {
     // image_transport::TransportHints hints(this->get_node_interface());
     sub_ = std::make_shared<image_transport::Subscriber>(image_transport::create_subscription(
-#ifdef IMAGE_TRANSPORT_USE_NODEINTERFACE
+#ifdef FFMPEG_IMAGE_TRANSPORT_USE_NODEINTERFACE
       *this,
 #else
       this,
