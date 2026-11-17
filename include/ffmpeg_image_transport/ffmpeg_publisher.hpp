@@ -17,6 +17,7 @@
 #define FFMPEG_IMAGE_TRANSPORT__FFMPEG_PUBLISHER_HPP_
 
 #include <ffmpeg_encoder_decoder/encoder.hpp>
+#include <ffmpeg_image_transport/image_transport_compat.hpp>
 #include <ffmpeg_image_transport/parameter_definition.hpp>
 #include <ffmpeg_image_transport_msgs/msg/ffmpeg_packet.hpp>
 #include <image_transport/simple_publisher_plugin.hpp>
@@ -29,37 +30,19 @@ using ffmpeg_image_transport_msgs::msg::FFMPEGPacket;
 using FFMPEGPublisherPlugin = image_transport::SimplePublisherPlugin<FFMPEGPacket>;
 using Image = sensor_msgs::msg::Image;
 using FFMPEGPacketConstPtr = FFMPEGPacket::ConstSharedPtr;
-class FFMPEGPublisher : public FFMPEGPublisherPlugin
+class FFMPEGPublisher : public compat::AdvertiseAdapter<FFMPEGPublisherPlugin>
 {
 public:
-#ifdef IMAGE_TRANSPORT_USE_PUBLISHER_T
-  using PublisherTFn = PublisherT;
-#else
-  using PublisherTFn = PublishFn;
-#endif
-#ifdef IMAGE_TRANSPORT_USE_QOS
-  using QoSType = rclcpp::QoS;
-#else
-  using QoSType = rmw_qos_profile_t;
-#endif
-#ifdef IMAGE_TRANSPORT_USE_NODEINTERFACE
-  using NodeType = image_transport::RequiredInterfaces;
-#else
-  using NodeType = rclcpp::Node *;
-#endif
+  using PublisherTFn = compat::PublisherTFn<FFMPEGPublisherPlugin>;
+  using QoSType = compat::QoSType;
+  using NodeType = compat::NodeType;
 
   FFMPEGPublisher();
   ~FFMPEGPublisher() override;
   std::string getTransportName() const override { return "ffmpeg"; }
 
 protected:
-#ifdef IMAGE_TRANSPORT_NEEDS_PUBLISHEROPTIONS
-  void advertiseImpl(
-    NodeType node, const std::string & base_topic, QoSType custom_qos,
-    rclcpp::PublisherOptions opt) override;
-#else
-  void advertiseImpl(NodeType node, const std::string & base_topic, QoSType custom_qos) override;
-#endif
+  QoSType initialize(NodeType node, const std::string & base_name, QoSType custom_qos) override;
   void publish(const Image & message, const PublisherTFn & publisher) const override;
   void shutdown() override;
 
@@ -68,7 +51,6 @@ private:
     const std::string & frame_id, const rclcpp::Time & stamp, const std::string & codec,
     uint32_t width, uint32_t height, uint64_t pts, uint8_t flags, uint8_t * data, size_t sz);
 
-  QoSType initialize(NodeType node, const std::string & base_name, QoSType custom_qos);
   void declareParameter(NodeType node, const ParameterDefinition & definition);
   void handleAVOptions(const std::string & opt);
   // variables ---------

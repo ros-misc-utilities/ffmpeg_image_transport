@@ -2,9 +2,9 @@ cmake_minimum_required(VERSION 3.16)
 
 project(ffmpeg_image_transport)
 
-# Default to C++14
+# Default to C++17
 if(NOT CMAKE_CXX_STANDARD)
-  set(CMAKE_CXX_STANDARD 14)
+  set(CMAKE_CXX_STANDARD 17)
 endif()
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
@@ -23,21 +23,6 @@ find_package(sensor_msgs REQUIRED)
 find_package(std_msgs REQUIRED)
 
 
-if(${image_transport_VERSION} VERSION_GREATER_EQUAL "5.0.0")
-  add_definitions(-DIMAGE_TRANSPORT_USE_PUBLISHER_T)
-  add_definitions(-DIMAGE_TRANSPORT_NEEDS_PUBLISHEROPTIONS)
-endif()
-
-if(${image_transport_VERSION} VERSION_GREATER_EQUAL "6.0.0")
-  add_definitions(-DIMAGE_TRANSPORT_RESOLVES_BASE_TOPIC)
-endif()
-if(${image_transport_VERSION} VERSION_GREATER_EQUAL "6.3.0")
-  add_definitions(-DIMAGE_TRANSPORT_USE_QOS)
-endif()
-if(${image_transport_VERSION} VERSION_GREATER_EQUAL "6.4.0")
-  add_definitions(-DIMAGE_TRANSPORT_USE_NODEINTERFACE)
-endif()
-
 set(LIBRARY_NAME ${PROJECT_NAME}_component)
 
 add_library(
@@ -48,6 +33,11 @@ add_library(
   src/parameter_definition.cpp
   src/utils.cpp
   src/manifest.cpp)
+
+# only the implementation (not the public headers) depends on this
+if(${image_transport_VERSION} VERSION_GREATER_EQUAL "6.0.0")
+  target_compile_definitions(${LIBRARY_NAME} PRIVATE IMAGE_TRANSPORT_RESOLVES_BASE_TOPIC)
+endif()
 
 target_include_directories(${LIBRARY_NAME} PUBLIC
   "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"

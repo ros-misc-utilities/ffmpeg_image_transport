@@ -51,12 +51,7 @@ static const ParameterDefinition params[] = {
      .set__read_only(false),
    ""}};
 
-FFMPEGSubscriber::FFMPEGSubscriber() : logger_(rclcpp::get_logger("FFMPEGSubscriber"))
-{
-#ifndef IMAGE_TRANSPORT_USE_NODEINTERFACE
-  node_ = nullptr;
-#endif
-}
+FFMPEGSubscriber::FFMPEGSubscriber() : logger_(rclcpp::get_logger("FFMPEGSubscriber")) {}
 
 FFMPEGSubscriber::~FFMPEGSubscriber() { decoder_.reset(); }
 
@@ -72,19 +67,6 @@ void FFMPEGSubscriber::shutdown()
 
 void FFMPEGSubscriber::frameReady(const ImageConstPtr & img, bool) const { (*userCallback_)(img); }
 
-void FFMPEGSubscriber::subscribeImpl(
-  NodeType node, const std::string & base_topic, const Callback & callback, QoSType custom_qos,
-  rclcpp::SubscriptionOptions opt)
-{
-  initialize(node, base_topic);
-#ifdef IMAGE_TRANSPORT_NEEDS_PUBLISHEROPTIONS
-  FFMPEGSubscriberPlugin::subscribeImpl(node, base_topic, callback, custom_qos, opt);
-#else
-  (void)opt;  // to suppress compiler warning
-  FFMPEGSubscriberPlugin::subscribeImpl(node, base_topic, callback, custom_qos);
-#endif
-}
-
 void FFMPEGSubscriber::initialize(NodeType node, const std::string & base_topic_o)
 {
   node_ = node;
@@ -92,14 +74,10 @@ void FFMPEGSubscriber::initialize(NodeType node, const std::string & base_topic_
   const std::string base_topic = base_topic_o;
 #else
   const std::string base_topic =
-    node_->get_node_topics_interface()->resolve_topic_name(base_topic_o);
+    compat::nodeRef(node_).get_node_topics_interface()->resolve_topic_name(base_topic_o);
 #endif
 
-#ifdef IMAGE_TRANSPORT_USE_NODEINTERFACE
-  uint ns_len = std::string(node.get_node_base_interface()->get_namespace()).length();
-#else
-  uint ns_len = node->get_effective_namespace().length();
-#endif
+  uint ns_len = compat::getNamespaceLength(node);
   // if a namespace is given (ns_len > 1), then strip one more
   // character to avoid a leading "/" that will then become a "."
   uint ns_prefix_len = ns_len > 1 ? ns_len + 1 : ns_len;

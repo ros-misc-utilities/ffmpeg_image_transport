@@ -16,6 +16,7 @@
 #ifndef FFMPEG_IMAGE_TRANSPORT__PARAMETER_DEFINITION_HPP_
 #define FFMPEG_IMAGE_TRANSPORT__PARAMETER_DEFINITION_HPP_
 
+#include <ffmpeg_image_transport/image_transport_compat.hpp>
 #include <image_transport/image_transport.hpp>
 #include <rclcpp/rclcpp.hpp>
 
@@ -25,11 +26,7 @@ struct ParameterDefinition
 {
   using ParameterDescriptor = rcl_interfaces::msg::ParameterDescriptor;
   using ParameterValue = rclcpp::ParameterValue;
-#ifdef IMAGE_TRANSPORT_USE_NODEINTERFACE
-  using NodeType = image_transport::RequiredInterfaces;
-#else
-  using NodeType = rclcpp::Node *;
-#endif
+  using NodeType = compat::NodeType;
 
   rclcpp::ParameterValue declare(NodeType node, const std::string & paramBase) const;
   // ---- variables

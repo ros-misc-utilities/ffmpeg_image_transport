@@ -17,6 +17,7 @@
 #define FFMPEG_IMAGE_TRANSPORT__FFMPEG_SUBSCRIBER_HPP_
 
 #include <ffmpeg_encoder_decoder/decoder.hpp>
+#include <ffmpeg_image_transport/image_transport_compat.hpp>
 #include <ffmpeg_image_transport/parameter_definition.hpp>
 #include <ffmpeg_image_transport_msgs/msg/ffmpeg_packet.hpp>
 #include <image_transport/simple_subscriber_plugin.hpp>
@@ -25,23 +26,15 @@
 namespace ffmpeg_image_transport
 {
 using FFMPEGSubscriberPlugin = image_transport::SimpleSubscriberPlugin<FFMPEGPacket>;
-class FFMPEGSubscriber : public FFMPEGSubscriberPlugin
+class FFMPEGSubscriber : public compat::SubscribeAdapter<FFMPEGSubscriberPlugin>
 {
 public:
   using Image = sensor_msgs::msg::Image;
   using ImageConstPtr = Image::ConstSharedPtr;
   using FFMPEGPacket = ffmpeg_image_transport_msgs::msg::FFMPEGPacket;
   using FFMPEGPacketConstPtr = FFMPEGPacket::ConstSharedPtr;
-#ifdef IMAGE_TRANSPORT_USE_QOS
-  using QoSType = rclcpp::QoS;
-#else
-  using QoSType = rmw_qos_profile_t;
-#endif
-#ifdef IMAGE_TRANSPORT_USE_NODEINTERFACE
-  using NodeType = image_transport::RequiredInterfaces;
-#else
-  using NodeType = rclcpp::Node *;
-#endif
+  using QoSType = compat::QoSType;
+  using NodeType = compat::NodeType;
 
   FFMPEGSubscriber();
   ~FFMPEGSubscriber() override;
@@ -51,9 +44,7 @@ public:
 protected:
   void internalCallback(const FFMPEGPacketConstPtr & msg, const Callback & user_cb) override;
 
-  void subscribeImpl(
-    NodeType node, const std::string & base_topic, const Callback & callback, QoSType custom_qos,
-    rclcpp::SubscriptionOptions) override;
+  void initialize(NodeType node, const std::string & base_topic) override;
 
   void shutdown() override;
   rclcpp::Logger logger_;
@@ -61,12 +52,11 @@ protected:
 
 private:
   void frameReady(const ImageConstPtr & img, bool /*isKeyFrame*/) const;
-  void initialize(NodeType node, const std::string & base_topic);
   std::string getDecodersFromMap(const std::string & encoding);
   void declareParameter(NodeType node, const ParameterDefinition & definition);
   void handleAVOptions(const std::string & opt);
   // -------------- variables
-  NodeType node_;
+  NodeType node_{};
   ffmpeg_encoder_decoder::Decoder decoder_;
   std::string decoderType_;
   const Callback * userCallback_{nullptr};

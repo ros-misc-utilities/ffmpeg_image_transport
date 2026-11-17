@@ -180,38 +180,14 @@ void FFMPEGPublisher::packetReady(
   msg->pts = pts;
   msg->flags = flags;
   msg->data.assign(data, data + sz);
-#ifdef IMAGE_TRANSPORT_USE_PUBLISHER_T
-  (*publishFunction_)->publish(*msg);
-#else
-  (*publishFunction_)(*msg);
-#endif
+  compat::publishMessage(*publishFunction_, *msg);
 }
-
-#ifdef IMAGE_TRANSPORT_NEEDS_PUBLISHEROPTIONS
-void FFMPEGPublisher::advertiseImpl(
-  NodeType node, const std::string & base_topic, QoSType custom_qos, rclcpp::PublisherOptions opt)
-{
-  auto qos = initialize(node, base_topic, custom_qos);
-  FFMPEGPublisherPlugin::advertiseImpl(node, base_topic, qos, opt);
-}
-#else
-void FFMPEGPublisher::advertiseImpl(
-  NodeType node, const std::string & base_topic, rmw_qos_profile_t custom_qos)
-{
-  auto qos = initialize(node, base_topic, custom_qos);
-  FFMPEGPublisherPlugin::advertiseImpl(node, base_topic, qos);
-}
-#endif
 
 FFMPEGPublisher::QoSType FFMPEGPublisher::initialize(
   NodeType node, const std::string & base_topic, QoSType custom_qos)
 {
   // namespace handling code lifted from compressed_image_transport
-#ifdef IMAGE_TRANSPORT_USE_NODEINTERFACE
-  uint ns_len = std::string(node.get_node_base_interface()->get_namespace()).length();
-#else
-  uint ns_len = node->get_effective_namespace().length();
-#endif
+  uint ns_len = compat::getNamespaceLength(node);
   // if a namespace is given (ns_len > 1), then strip one more
   // character to avoid a leading "/" that will then become a "."
   uint ns_prefix_len = ns_len > 1 ? ns_len + 1 : ns_len;
@@ -223,12 +199,7 @@ FFMPEGPublisher::QoSType FFMPEGPublisher::initialize(
     declareParameter(node, p);
   }
   // bump queue size to 2 * distance between keyframes
-#ifdef IMAGE_TRANSPORT_USE_QOS
-  custom_qos.keep_last(
-    std::max(static_cast<int>(custom_qos.get_rmw_qos_profile().depth), 2 * encoder_.getGOPSize()));
-#else
-  custom_qos.depth = std::max(static_cast<int>(custom_qos.depth), 2 * encoder_.getGOPSize());
-#endif
+  compat::setMinimumQueueDepth(custom_qos, 2 * encoder_.getGOPSize());
   return (custom_qos);
 }
 

@@ -22,13 +22,8 @@ rclcpp::ParameterValue ParameterDefinition::declare(
 {
   const std::string paramName = paramBase + descriptor.name;
   rclcpp::ParameterValue v;
-#ifdef IMAGE_TRANSPORT_USE_NODEINTERFACE
-  auto params = node.get_node_parameters_interface();
-  auto logger = node.get_node_logging_interface()->get_logger();
-#else
-  auto params = node->get_node_parameters_interface();
-  auto logger = node->get_node_logging_interface()->get_logger();
-#endif
+  auto params = compat::nodeRef(node).get_node_parameters_interface();
+  auto logger = compat::nodeRef(node).get_node_logging_interface()->get_logger();
   try {
     const auto & map = params->get_parameter_overrides();
     if (map.find(paramName) == map.end() && !warningIfNotSet.empty()) {

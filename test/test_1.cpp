@@ -15,6 +15,7 @@
 
 #include <gtest/gtest.h>
 
+#include <ffmpeg_image_transport/image_transport_compat.hpp>
 #include <image_transport/image_transport.hpp>
 #include <rclcpp/rclcpp.hpp>
 #include <sensor_msgs/image_encodings.hpp>
@@ -35,6 +36,16 @@ static void setNodeParameter(
     // ignore exception
   }
   node->set_parameter(p);
+}
+
+template <class N = ffmpeg_image_transport::compat::NodeType>
+static std::shared_ptr<ImageTransport> makeImageTransport(rclcpp::Node & node)
+{
+  if constexpr (std::is_pointer_v<N>) {
+    return (std::make_shared<ImageTransport>(std::shared_ptr<rclcpp::Node>(&node, [](auto *) {})));
+  } else {
+    return (std::make_shared<ImageTransport>(N(node)));
+  }
 }
 
 class TestPublisher : public rclcpp::Node
@@ -59,11 +70,7 @@ public:
   // since it only reads the parameters when the plugin is loaded
   void initialize()
   {
-#ifdef IMAGE_TRANSPORT_USE_NODEINTERFACE
-    image_transport_ = std::make_shared<ImageTransport>(image_transport::RequiredInterfaces(*this));
-#else
-    image_transport_ = std::make_shared<ImageTransport>(std::shared_ptr<Node>(this, [](auto *) {}));
-#endif
+    image_transport_ = makeImageTransport(*this);
     pub_ =
       std::make_shared<image_transport::Publisher>(image_transport_->advertise("camera/image", 1));
   }
@@ -107,15 +114,6 @@ private:
   std::string parameter_base_;
 };
 
-#ifdef IMAGE_TRANSPORT_USE_QOS
-static rclcpp::QoS convert_profile(const rmw_qos_profile_t & p)
-{
-  return (rclcpp::QoS(rclcpp::QoSInitialization::from_rmw(p), p));
-}
-#else
-static const rmw_qos_profile_t & convert_profile(const rmw_qos_profile_t & p) { return (p); }
-#endif
-
 class TestSubscriber : public rclcpp::Node
 {
 public:
@@ -134,13 +132,9 @@ public:
   {
     // image_transport::TransportHints hints(this->get_node_interface());
     sub_ = std::make_shared<image_transport::Subscriber>(image_transport::create_subscription(
-#ifdef IMAGE_TRANSPORT_USE_NODEINTERFACE
-      *this,
-#else
-      this,
-#endif
-      "camera/image", std::bind(&TestSubscriber::imageCallback, this, std::placeholders::_1),
-      "ffmpeg", convert_profile(rmw_qos_profile_default)));
+      ffmpeg_image_transport::compat::toNodeType(*this), "camera/image",
+      std::bind(&TestSubscriber::imageCallback, this, std::placeholders::_1), "ffmpeg",
+      ffmpeg_image_transport::compat::toQoSType(rmw_qos_profile_default)));
   }
   void shutDown()
   {
